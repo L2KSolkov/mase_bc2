@@ -159,4 +159,9 @@
       <Filter>Source Files\Network\Http</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Scripts\Setup.bat">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

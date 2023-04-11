@@ -194,6 +194,9 @@
     <ClCompile Include="source\Network\TcpServer.cpp" />
     <ClCompile Include="source\Network\UdpServer.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Scripts\Setup.bat" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
