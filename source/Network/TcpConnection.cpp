@@ -52,7 +52,7 @@ void TcpConnection::start()
 				emuIp = getLocalIp();
 			client = new GameClient(type, db, emuIp, isLocal);
 		}
-		ping_timer = new asio::deadline_timer(socket_.get_io_service());
+		ping_timer = new asio::deadline_timer((boost::asio::io_context&)(socket_).get_executor().context());
 	}
 	else if(type != MISC)
 		debug->notification(1, type, "--[%s:%i] Maximum number of allowed connections for this type reached, ignoring connection request...", remoteIp.c_str(), remotePort);
@@ -107,7 +107,7 @@ void TcpConnection::handle_read(const system::error_code& error, size_t bytes_tr
 			outgoingQueue.pop_front();
 
 			if(!delayed_timer)
-				delayed_timer = new asio::deadline_timer(socket_.get_io_service(), posix_time::seconds(delayed_packet->getDelayTime()));
+				delayed_timer = new asio::deadline_timer((boost::asio::io_context&)(socket_).get_executor().context(), posix_time::seconds(delayed_packet->getDelayTime()));
 			else
 				delayed_timer->expires_from_now(posix_time::seconds(delayed_packet->getDelayTime()));
 
@@ -172,7 +172,7 @@ void TcpConnection::handle_write(const system::error_code& error)
 			outgoingQueue.pop_front();
 
 			if(!delayed_timer)
-				delayed_timer = new asio::deadline_timer(socket_.get_io_service(), posix_time::seconds(delayed_packet->getDelayTime()));
+				delayed_timer = new asio::deadline_timer((boost::asio::io_context&)(socket_).get_executor().context(), posix_time::seconds(delayed_packet->getDelayTime()));
 			else
 				delayed_timer->expires_from_now(posix_time::seconds(delayed_packet->getDelayTime()));
 

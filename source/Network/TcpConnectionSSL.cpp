@@ -512,8 +512,8 @@ void TcpConnectionSSL::ProcessPacket(Packet* receivedPacket)
 				{
 					if(!ping_timer && !memcheck_timer)	// activate both ping and memcheck timers when we receive this
 					{
-						ping_timer = new asio::deadline_timer(socket_.get_io_service());//, posix_time::seconds(150)); // only create the object here, it'll be updated below anyway
-						memcheck_timer = new asio::deadline_timer(socket_.get_io_service(), posix_time::seconds(500));
+						ping_timer = new asio::deadline_timer((boost::asio::io_context&)(socket_).get_executor().context());//, posix_time::seconds(150)); // only create the object here, it'll be updated below anyway
+						memcheck_timer = new asio::deadline_timer((boost::asio::io_context&)(socket_).get_executor().context(), posix_time::seconds(500));
 						memcheck_timer->async_wait(boost::bind(&TcpConnectionSSL::handle_memcheck, shared_from_this(), asio::placeholders::error));
 					}
 					else	// update memcheck timer (was approximately 300 seconds in captured traffics)

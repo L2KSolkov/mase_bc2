@@ -28,13 +28,13 @@ void TcpServer::start_accept()
 {
 	if(type == GAME_SERVER_SSL || type == GAME_CLIENT_SSL)
 	{
-		new_ssl_connection.reset(new TcpConnectionSSL(acceptor_.get_io_service(), type, context_, db));
+		new_ssl_connection.reset(new TcpConnectionSSL((boost::asio::io_context&)(acceptor_).get_executor().context(), type, context_, db));
 		acceptor_.async_accept(	new_ssl_connection->socket(),
 								boost::bind(&TcpServer::handle_acceptSSL, this, asio::placeholders::error));
 	}
 	else
 	{
-		new_connection.reset(new TcpConnection(acceptor_.get_io_service(), type, db));
+		new_connection.reset(new TcpConnection((boost::asio::io_context&)(acceptor_).get_executor().context(), type, db));
 		acceptor_.async_accept(	new_connection->socket(),
 								boost::bind(&TcpServer::handle_accept, this, asio::placeholders::error));
 	}
@@ -71,6 +71,6 @@ void TcpServer::handle_acceptSSL(const system::error_code& error)
 
 void TcpServer::handle_stop()
 {
-	acceptor_.get_io_service().stop();
+	//acceptor_.stop();
 	acceptor_.close();
 }

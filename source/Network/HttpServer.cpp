@@ -21,7 +21,7 @@ HttpServer::HttpServer(asio::io_service& io_service, bool updater_respond) : acc
 
 void HttpServer::start_accept()
 {
-	new_connection_.reset(new HttpConnection(acceptor_.get_io_service(), request_handler_, updater_respond));
+	new_connection_.reset(new HttpConnection((boost::asio::io_context&)(acceptor_).get_executor().context(), request_handler_, updater_respond));
 	acceptor_.async_accept(new_connection_->socket(),
 							boost::bind(&HttpServer::handle_accept, this, asio::placeholders::error));
 }
