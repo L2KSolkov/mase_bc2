@@ -526,7 +526,7 @@ void TcpConnection::update_ping_timer()
 {
 	if(ping_timer && incomingQueue.size() <= 1)		// all packets are processed, update ping timer (would it be better to just remove the queue check?)
 	{
-		int duration = ping_timer->expires_from_now().total_seconds();
+		long long duration = ping_timer->expires_from_now().total_seconds();
 
 		if(duration < 0 || duration > 150)
 			duration = 150;

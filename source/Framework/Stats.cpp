@@ -140,7 +140,7 @@ void Stats::saveStats()
 		statsFile.close();
 	}
 	if(!done)
-		filesystem::copy_file(dest_path, source_path, filesystem::copy_option::overwrite_if_exists);
+		filesystem::copy_file(dest_path, source_path, filesystem::copy_options::overwrite_existing);
 	filesystem::remove(dest_path);
 }
 
@@ -350,7 +350,7 @@ void Stats::saveDogtags()
 	else
 		debug->warning(3, DEBUG, "The dogtag file \"%s\" was not found or could not be opened for saving", dogtagPath.c_str());
 	if(!done)
-		filesystem::copy_file(dest_path, source_path, filesystem::copy_option::overwrite_if_exists);
+		filesystem::copy_file(dest_path, source_path, filesystem::copy_options::overwrite_existing);
 
 	filesystem::remove(dest_path);
 }
