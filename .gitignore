@@ -396,3 +396,7 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+external/boost
+external/boost - Copy/
+external/boost
+*.idb
