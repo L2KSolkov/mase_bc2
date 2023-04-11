@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+.vs/mase_bc2/v17/Browse.VC.db
+.vs/mase_bc2/v17/.suo
+.vs/mase_bc2/FileContentIndex/read.lock
+.vs/mase_bc2/FileContentIndex/417a8689-c82e-4f3a-bdfe-4091567adedc.vsidx
