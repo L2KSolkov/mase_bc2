@@ -3,7 +3,7 @@
 #include "../Network/Packet.h"
 #include "Database.h"
 
-const string ServerCoreInfo[GAMES_SIZE] =
+const std::string ServerCoreInfo[GAMES_SIZE] =
 {
 	"IP",
 	"PORT",
@@ -45,7 +45,7 @@ const string ServerCoreInfo[GAMES_SIZE] =
 	"JOIN"
 };
 
-const string ServerGdetInfo[GDET_SIZE] =
+const std::string ServerGdetInfo[GDET_SIZE] =
 {
 	"D-AutoBalance",			//AUTOBALANCE,
 	"D-BannerUrl",				//BANNERURL,
@@ -104,27 +104,27 @@ class GameServer
 
 		//serverInfoPlasma->
 		int		sock_id;
-		string	user_lkey;
-		string	persona_lkey;
+		std::string	user_lkey;
+		std::string	persona_lkey;
 		//<-serverInfoPlasma
 
 		//serverInfoTheater->
 		int		sock_tid;
-		string	clientVersion;
-		string	platform;
+		std::string	clientVersion;
+		std::string	platform;
 		int		gid;
 		int		player_count;
 		//<-serverInfoTheater
-		string	secret;
+		std::string	secret;
 
 	public:
 		GameServer(int connectionType, Database* db);
 		~GameServer();
-		bool acct(std::list<Packet*>* queue, Packet* packet, string txn);
-		bool asso(std::list<Packet*>* queue, Packet* packet, string txn);
-		int rank(std::list<Packet*>* queue, Packet* packet, string txn);
-		bool pres(std::list<Packet*>* queue, Packet* packet, string txn);
-		bool fltr(std::list<Packet*>* queue, Packet* packet, string txn);
+		bool acct(std::list<Packet*>* queue, Packet* packet, std::string txn);
+		bool asso(std::list<Packet*>* queue, Packet* packet, std::string txn);
+		int rank(std::list<Packet*>* queue, Packet* packet, std::string txn);
+		bool pres(std::list<Packet*>* queue, Packet* packet, std::string txn);
+		bool fltr(std::list<Packet*>* queue, Packet* packet, std::string txn);
 		//do we need pres here?
 
 		int ProcessTheater(std::list<Packet*>* queue, Packet* packet, char* type, const char* ip);

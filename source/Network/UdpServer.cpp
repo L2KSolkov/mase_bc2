@@ -3,7 +3,7 @@
 
 extern Logger* debug;
 
-UdpServer::UdpServer(asio::io_service& io_service, int type, int port) : socket_(io_service, udp::endpoint(udp::v4(), port))
+UdpServer::UdpServer(boost::asio::io_service& io_service, int type, int port) : socket_(io_service, boost::asio::ip::udp::endpoint(boost::asio::ip::udp::v4(), port))
 {
 	this->type = type;
 	this->port = port;
@@ -14,23 +14,23 @@ UdpServer::UdpServer(asio::io_service& io_service, int type, int port) : socket_
 
 void UdpServer::start_receive()
 {
-	socket_.async_receive_from( asio::buffer(received_data, max_length), remote_endpoint_,
+	socket_.async_receive_from( boost::asio::buffer(received_data, max_length), remote_endpoint_,
 								boost::bind(&UdpServer::handle_receive, this,
-											asio::placeholders::error, asio::placeholders::bytes_transferred));
+											boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
-void UdpServer::handle_receive(const system::error_code& error, size_t bytes_transferred)
+void UdpServer::handle_receive(const boost::system::error_code& error, size_t bytes_transferred)
 {
 	if(!error && bytes_transferred > 0)
 	{
 		ProcessData(DataToPacket(bytes_transferred));
-		socket_.async_send_to(asio::buffer(send_data, send_data.size()), remote_endpoint_,
-								boost::bind(&UdpServer::handle_send, this, asio::placeholders::error, asio::placeholders::bytes_transferred));
+		socket_.async_send_to(boost::asio::buffer(send_data, send_data.size()), remote_endpoint_,
+								boost::bind(&UdpServer::handle_send, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 		start_receive();
 	}
 }
 
-void UdpServer::handle_send(const system::error_code& /*error*/, size_t /*bytes_transferred*/)
+void UdpServer::handle_send(const boost::system::error_code& /*error*/, size_t /*bytes_transferred*/)
 {
 	//done sending, do we need to do something more here? (normally we don't specifically wait for incoming udp packets)
 }
@@ -56,7 +56,7 @@ Packet* UdpServer::DataToPacket(size_t bytes_transferred)
 
 		//Create the package and add it to the end of the queue
 		packet = new Packet(type, type2, length, (char*)data);
-		string packetData = packet->toString();
+		std::string packetData = packet->toString();
 		debug->notification(3, this->type, "<<[%s] %s 0x%08x {%s}", getRemoteIp().c_str(), packet->GetType(), packet->GetType2(), packetData.c_str());
 
 		current_length += length;
@@ -69,9 +69,9 @@ Packet* UdpServer::DataToPacket(size_t bytes_transferred)
 }
 
 
-string UdpServer::PacketToData(Packet* packet)
+std::string UdpServer::PacketToData(Packet* packet)
 {
-	string buffer = packet->GetType();
+	std::string buffer = packet->GetType();
 	buffer.append(7, '\0');		// upd packets have zero filled header
 
 	int len = 12 + packet->GetData().size() + 1;	//header + data + final null char
@@ -79,7 +79,7 @@ string UdpServer::PacketToData(Packet* packet)
 	buffer.append(packet->GetData());
 	buffer.push_back('\0');
 
-	string packetData = packet->toString();
+	std::string packetData = packet->toString();
 	debug->notification(3, type, ">>[%s] %s 0x%08x {%s}", getRemoteIp().c_str(), packet->GetType(), packet->GetType2(), packetData.c_str());
 	delete packet;
 
@@ -96,7 +96,7 @@ unsigned int UdpServer::decode( unsigned char* data, int bytes )
 	return(num);
 }
 
-string UdpServer::getLocalIp()
+std::string UdpServer::getLocalIp()
 {
 	return socket_.local_endpoint().address().to_string();
 }
@@ -105,7 +105,7 @@ int UdpServer::getLocalPort()
 	return socket_.local_endpoint().port();
 }
 
-string UdpServer::getRemoteIp()
+std::string UdpServer::getRemoteIp()
 {
 	return remote_endpoint_.address().to_string();
 }
@@ -120,7 +120,7 @@ void UdpServer::ProcessData(Packet* packet)
 	if(packet != NULL)
 	{
 		//debug->notification(2, type, "local port: %i, remote port: %i", getLocalPort(), getRemotePort());
-		string port = lexical_cast<string>(getRemotePort());
+		std::string port = boost::lexical_cast<std::string>(getRemotePort());
 		sendPacket = new Packet("ECHO", 0x00000000);
 		sendPacket->SetVar("TXN", "ECHO");
 		sendPacket->SetVar("IP", getRemoteIp());

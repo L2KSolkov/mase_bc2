@@ -3,9 +3,9 @@
 
 extern Logger* debug;
 
-TcpServer::TcpServer(asio::io_service& io_service, int type, int port, Database* db) :
-			acceptor_(io_service, tcp::endpoint(tcp::v4(), port)),
-			context_(asio::ssl::context::sslv3)
+TcpServer::TcpServer(boost::asio::io_service& io_service, int type, int port, Database* db) :
+			acceptor_(io_service, boost::asio::ip::tcp::endpoint(boost::asio::ip::tcp::v4(), port)),
+			context_(boost::asio::ssl::context::sslv3)
 {
 	this->type = type;
 	this->port = port;
@@ -30,17 +30,17 @@ void TcpServer::start_accept()
 	{
 		new_ssl_connection.reset(new TcpConnectionSSL((boost::asio::io_context&)(acceptor_).get_executor().context(), type, context_, db));
 		acceptor_.async_accept(	new_ssl_connection->socket(),
-								boost::bind(&TcpServer::handle_acceptSSL, this, asio::placeholders::error));
+								boost::bind(&TcpServer::handle_acceptSSL, this, boost::asio::placeholders::error));
 	}
 	else
 	{
 		new_connection.reset(new TcpConnection((boost::asio::io_context&)(acceptor_).get_executor().context(), type, db));
 		acceptor_.async_accept(	new_connection->socket(),
-								boost::bind(&TcpServer::handle_accept, this, asio::placeholders::error));
+								boost::bind(&TcpServer::handle_accept, this, boost::asio::placeholders::error));
 	}
 }
 
-void TcpServer::handle_accept(const system::error_code& error)
+void TcpServer::handle_accept(const boost::system::error_code& error)
 {
 	if(!acceptor_.is_open())
 	{
@@ -54,7 +54,7 @@ void TcpServer::handle_accept(const system::error_code& error)
 	start_accept();
 }
 
-void TcpServer::handle_acceptSSL(const system::error_code& error)
+void TcpServer::handle_acceptSSL(const boost::system::error_code& error)
 {
 	if(!acceptor_.is_open())
 	{

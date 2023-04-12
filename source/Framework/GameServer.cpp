@@ -24,7 +24,7 @@ GameServer::~GameServer()
 		database->removeGame(gid);
 }
 
-bool GameServer::acct(list<Packet*>* queue, Packet* packet, string txn)
+bool GameServer::acct(std::list<Packet*>* queue, Packet* packet, std::string txn)
 {
 	Packet* sendPacket = NULL;
 
@@ -43,12 +43,12 @@ bool GameServer::acct(list<Packet*>* queue, Packet* packet, string txn)
 			sendPacket->SetVar("lkey", user_lkey);
 			sendPacket->SetVar("profileId", user.id);
 			sendPacket->SetVar("userId", user.id);
-			string encryptedInfo = packet->GetVar("returnEncryptedInfo");
+			std::string encryptedInfo = packet->GetVar("returnEncryptedInfo");
 			if(!encryptedInfo.empty() && (encryptedInfo.compare("1") == 0))
 			{
-				string encrypted("Ciyvab0tregdVsBtboIpeChe4G6uzC1v5_-SIxmvSL");
+				std::string encrypted("Ciyvab0tregdVsBtboIpeChe4G6uzC1v5_-SIxmvSL");
 				encrypted.append(fw->randomString(86, SEED_DEFAULT));
-				sendPacket->SetVar("encryptedLoginInfo", encrypted);	//lets just assume one half of that string is constant, the other is random
+				sendPacket->SetVar("encryptedLoginInfo", encrypted);	//lets just assume one half of that std::string is constant, the other is random
 				//if this is missing, server shows at OnConnectionReady only zeroes - though this doesnt seem to influence the connection?
 				//sendPacket->SetVar("encryptedLoginInfo", "Ciyvab0tregdVsBtboIpeChe4G6uzC1v5_-SIxmvSLJubxCaMWOxD1iabTkdIjA6nFyrA9nvKvtbovnovBD99T8hIHEGPkl-I9xeEXAXN9ICCmuaWcMHP6q33WjvASgI");
 				//Ciyvab0tregdVsBtboIpeChe4G6uzC1v5_-SIxmvSLJubxCaMWOxD1iabTkdIjA6nFyrA9nvKvtbovnovBD99T8hIHEGPkl-I9xeEXAXN9ICCmuaWcMHP6q33WjvASgI
@@ -100,7 +100,7 @@ bool GameServer::acct(list<Packet*>* queue, Packet* packet, string txn)
 
 	else if(txn.compare("NuAddPersona") == 0)	//if the server accounts are unaccessible for users then we never get here anyway
 	{
-		string name = packet->GetVar("name");
+		std::string name = packet->GetVar("name");
 		//add persona here but is not required for servers
 		sendPacket = new Packet("acct", 0x80000000);
 		sendPacket->SetVar("TXN", txn);
@@ -108,8 +108,8 @@ bool GameServer::acct(list<Packet*>* queue, Packet* packet, string txn)
 
 	else if(txn.compare("NuGetEntitlements") == 0)
 	{
-		string groupName = packet->GetVar("groupName");
-		int playerUserId = lexical_cast<int>(packet->GetVar("masterUserId"));
+		std::string groupName = packet->GetVar("groupName");
+		int playerUserId = boost::lexical_cast<int>(packet->GetVar("masterUserId"));
 
 		if(!groupName.empty())
 		{
@@ -174,8 +174,8 @@ bool GameServer::acct(list<Packet*>* queue, Packet* packet, string txn)
 		}
 		else
 		{
-			string entitlementTag = packet->GetVar("entitlementTag");
-			string projectId = packet->GetVar("projectId");
+			std::string entitlementTag = packet->GetVar("entitlementTag");
+			std::string projectId = packet->GetVar("projectId");
 			if(!entitlementTag.empty() && entitlementTag.compare("BFBC2:PC:VIETNAM_ACCESS") == 0)
 			{
 				sendPacket = new Packet("acct", 0x80000000);
@@ -309,7 +309,7 @@ bool GameServer::acct(list<Packet*>* queue, Packet* packet, string txn)
 
 	else if(txn.compare("NuLookupUserInfo") == 0)
 	{
-		string playerPersonaName = packet->GetVar("userInfo.0.userName");
+		std::string playerPersonaName = packet->GetVar("userInfo.0.userName");
 		list_entry result;
 
 		sendPacket = new Packet("acct", 0x80000000);
@@ -337,7 +337,7 @@ bool GameServer::acct(list<Packet*>* queue, Packet* packet, string txn)
 	return false;
 }
 
-bool GameServer::asso(list<Packet*>* queue, Packet* packet, string txn)
+bool GameServer::asso(std::list<Packet*>* queue, Packet* packet, std::string txn)
 {
 	Packet* sendPacket = NULL;
 
@@ -351,7 +351,7 @@ bool GameServer::asso(list<Packet*>* queue, Packet* packet, string txn)
 		sendPacket->SetVar("owner.id", packet->GetVar("owner.id"));
 		sendPacket->SetVar("owner.type", "1");
 
-		string type = packet->GetVar("type");
+		std::string type = packet->GetVar("type");
 		if(type.compare("PlasmaFriends") == 0)
 		{
 			//TODO: make the friends list database
@@ -394,7 +394,7 @@ bool GameServer::asso(list<Packet*>* queue, Packet* packet, string txn)
 		/*this is not necessary since we are getting the user_id when GetStats is called anyway
 		it may get relevent when we want to implement friends though
 
-		tempPid = lexical_cast<int>(packet->GetVar("addRequests.0.member.id"));
+		tempPid = boost::lexical_cast<int>(packet->GetVar("addRequests.0.member.id"));
 		list_entry tempPlayer;
 
 		if(!database->getPersona(tempPid, &tempPlayer))
@@ -420,14 +420,14 @@ bool GameServer::asso(list<Packet*>* queue, Packet* packet, string txn)
 	return false;
 }
 
-int GameServer::rank(list<Packet*>* queue, Packet* packet, string txn)
+int GameServer::rank(std::list<Packet*>* queue, Packet* packet, std::string txn)
 {
 	int state = NORMAL;
 	Packet* sendPacket = NULL;
 
 	if(txn.compare("GetStats") == 0)
 	{
-		int playerPersonaId = lexical_cast<int>(packet->GetVar("owner"));
+		int playerPersonaId = boost::lexical_cast<int>(packet->GetVar("owner"));
 		list_entry result;
 
 		if(database->getPersona(playerPersonaId, &result))
@@ -436,8 +436,8 @@ int GameServer::rank(list<Packet*>* queue, Packet* packet, string txn)
 			sendPacket = new Packet("rank", 0x80000000);
 			sendPacket->SetVar("TXN", txn);
 
-			string buffer = packet->GetVar("keys.[]");
-			int count = lexical_cast<int>(buffer);
+			std::string buffer = packet->GetVar("keys.[]");
+			int count = boost::lexical_cast<int>(buffer);
 			sendPacket->SetVar("stats.[]", buffer);
 
 			char iterBuf[24];
@@ -445,7 +445,7 @@ int GameServer::rank(list<Packet*>* queue, Packet* packet, string txn)
 			{
 				sprintf(iterBuf, "keys.%i", i);
 				buffer = packet->GetVar(iterBuf);
-				string value = stats_data->getKey(buffer);
+				std::string value = stats_data->getKey(buffer);
 
 				sprintf(iterBuf, "stats.%i.key", i);
 				sendPacket->SetVar(iterBuf, buffer);
@@ -473,25 +473,25 @@ int GameServer::rank(list<Packet*>* queue, Packet* packet, string txn)
 		//TXN=UpdateStats, u.0.o=6, u.0.ot=1, u.0.s.[]=25, u.0.s.0.ut=3, u.0.s.0.k=c_9a91__sw_g, u.0.s.0.v=566.1666, u.0.s.0.pt=0, u.0.s.1.ut=3, u.0.s.1.k=c__de_ko_g, u.0.s.1.v=1.0000, u.0.s.1.pt=0, u.0.s.2.ut=3, u.0.s.2.k=c_ah64__ddw_g, u.0.s.2.v=63.5230, u.0.s.2.pt=0, u.0.s.3.ut=3, u.0.s.3.k=c_ah64__si_g, u.0.s.3.v=15.0667, u.0.s.3.pt=0, u.0.s.4.ut=1, u.0.s.4.k=c_brmel_mel__kw_g, u.0.s.4.v=1.0000, u.0.s.4.pt=0, u.0.s.5.ut=1, u.0.s.5.k=c_gomel_mel__kw_g, u.0.s.5.v=1.0000, u.0.s.5.pt=0, u.0.s.6.ut=1, u.0.s.6.k=c_i04_mel__kw_g, u.0.s.6.v=1.0000, u.0.s.6.pt=0, u.0.s.7.ut=1, u.0.s.7.k=c_i05_mel__kw_g, u.0.s.7.v=1.0000, u.0.s.7.pt=0, u.0.s.8.ut=1, u.0.s.8.k=c_i20___ko_g, u.0.s.8.v=1.0000, u.0.s.8.pt=0, u.0.s.9.ut=1, u.0.s.9.k=c_i27___sa_g, u.0.s.9.v=567.3000, u.0.s.9.pt=0, u.0.s.10.ut=1, u.0.s.10.k=c_i28___sa_g, u.0.s.10.v=567.3000, u.0.s.10.pt=0, u.0.s.11.ut=1, u.0.s.11.k=c_i29___sa_g, u.0.s.11.v=567.3000, u.0.s.11.pt=0, u.0.s.12.ut=1, u.0.s.12.k=c_i30___fc_g, u.0.s.12.v=1.0000, u.0.s.12.pt=0, u.0.s.13.ut=3, u.0.s.13.k=c_knv__kw_g, u.0.s.13.v=1.0000, u.0.s.13.pt=0, u.0.s.14.ut=3, u.0.s.14.k=c_knv__sw_g, u.0.s.14.v=1.1334, u.0.s.14.pt=0, u.0.s.15.ut=1, u.0.s.15.k=c_plmel_mel__kw_g, u.0.s.15.v=1.0000, u.0.s.15.pt=0, u.0.s.16.ut=1, u.0.s.16.k=c_simel_mel__kw_g, u.0.s.16.v=1.0000, u.0.s.16.pt=0, u.0.s.17.ut=1, u.0.s.17.k=c_ta38___sa_g, u.0.s.17.v=567.3000, u.0.s.17.pt=0, u.0.s.18.ut=3, u.0.s.18.k=dogt, u.0.s.18.v=1.0000, u.0.s.18.pt=0, u.0.s.19.ut=0, u.0.s.19.k=elo, u.0.s.19.v=4.9848, u.0.s.19.t=20130802, u.0.s.19.pt=0, u.0.s.20.ut=3, u.0.s.20.k=kills, u.0.s.20.v=1.0000, u.0.s.20.pt=0, u.0.s.21.ut=3, u.0.s.21.k=sc_demo, u.0.s.21.v=200.0000, u.0.s.21.pt=0, u.0.s.22.ut=3, u.0.s.22.k=sc_general, u.0.s.22.v=50.0000, u.0.s.22.pt=0, u.0.s.23.ut=3, u.0.s.23.k=sc_objective, u.0.s.23.v=150.0000, u.0.s.23.pt=0, u.0.s.24.ut=3, u.0.s.24.k=time, u.0.s.24.v=567.3000, u.0.s.24.pt=0, u.[]=1}
 		if(packet->GetVar("u.0.ot").compare("1") == 0)// && !fw->emuCfg().override_stats_with_template)
 		{
-			int playerPersonaId = lexical_cast<int>(packet->GetVar("u.0.o"));
+			int playerPersonaId = boost::lexical_cast<int>(packet->GetVar("u.0.o"));
 			list_entry result;
 
 			if(database->getPersona(playerPersonaId, &result))
 			{
 				Stats* stats_data = new Stats(result.data[USER_EMAIL], result.name);
-				int count = lexical_cast<int>(packet->GetVar("u.0.s.[]"));
+				int count = boost::lexical_cast<int>(packet->GetVar("u.0.s.[]"));
 				double temp_score = 0.0f;
 				char buffer[16];
 
 				for(int i = 0; i < count; i++)
 				{
 					sprintf(buffer, "u.0.s.%i.k", i);		//is now key name
-					string key = packet->GetVar(buffer);
+					std::string key = packet->GetVar(buffer);
 					sprintf(buffer, "u.0.s.%i.ut", i);
-					int updateMethod = lexical_cast<int>(packet->GetVar(buffer));
+					int updateMethod = boost::lexical_cast<int>(packet->GetVar(buffer));
 					sprintf(buffer, "u.0.s.%i.v", i);		//is now value of key
-					string value = packet->GetVar(buffer);
-					string old = stats_data->getKey(key);
+					std::string value = packet->GetVar(buffer);
+					std::string old = stats_data->getKey(key);
 
 					if(updateMethod == 3 && !old.empty() && !value.empty())			//1 = absolute value, 3 = relative value, 0 = absolute value (should round it)
 					{
@@ -519,17 +519,17 @@ int GameServer::rank(list<Packet*>* queue, Packet* packet, string txn)
 						{
 							stringstream strmbuf;
 							strmbuf << file.rdbuf();
-							string unknownKeys = strmbuf.str();
+							std::string unknownKeys = strmbuf.str();
 							key.insert(0, "\"");
 							key.append("\"\n");
 							int result = unknownKeys.find(key, 0);
-							if(result == string::npos)
+							if(result == std::string::npos)
 								file.write(key.c_str(), key.size());
 
 							file.close();
 							key.pop_back();		//we dont want the newline at the end to be printed
 							//key.erase(key.size()-1, 1);
-							if(result != string::npos)
+							if(result != std::string::npos)
 								debug->notification(4, connectionType, "Key %s is already in ignoredKeys file", key.c_str());
 							else
 								debug->notification(3, connectionType, "Added key %s to ignoredKeys file", key.c_str());
@@ -563,7 +563,7 @@ int GameServer::rank(list<Packet*>* queue, Packet* packet, string txn)
 	return state;
 }
 
-bool GameServer::pres(list<Packet*>* queue, Packet* packet, string txn)
+bool GameServer::pres(std::list<Packet*>* queue, Packet* packet, std::string txn)
 {
 	Packet* sendPacket = NULL;
 
@@ -582,7 +582,7 @@ bool GameServer::pres(list<Packet*>* queue, Packet* packet, string txn)
 	return false;
 }
 
-bool GameServer::fltr(list<Packet*>* queue, Packet* packet, string txn)
+bool GameServer::fltr(std::list<Packet*>* queue, Packet* packet, std::string txn)
 {
 	Packet* sendPacket = NULL;
 	if(txn.compare("FilterProfanity") == 0)
@@ -591,13 +591,13 @@ bool GameServer::fltr(list<Packet*>* queue, Packet* packet, string txn)
 		sendPacket->SetVar("TXN", txn);
 		sendPacket->SetVar("realtime", packet->GetVar("realtime"));
 		sendPacket->SetVar("subChar", packet->GetVar("subChar"));
-		int count = lexical_cast<int>(packet->GetVar("strings.[]"));
+		int count = boost::lexical_cast<int>(packet->GetVar("strings.[]"));
 		sendPacket->SetVar("strings.[]", count);
 		for(int i = 0; i < count; i++)
 		{
-			string buffer = "strings.";
-			buffer.append(lexical_cast<string>(i));
-			string buffer2 = buffer;
+			std::string buffer = "strings.";
+			buffer.append(boost::lexical_cast<std::string>(i));
+			std::string buffer2 = buffer;
 			buffer.append(".filtered");
 			sendPacket->SetVar(buffer, packet->GetVar(buffer2));
 
@@ -617,7 +617,7 @@ bool GameServer::fltr(list<Packet*>* queue, Packet* packet, string txn)
 //////////////////////////////
 // Theater processing stuff //
 //////////////////////////////
-int GameServer::ProcessTheater(list<Packet*>* queue, Packet* packet, char* type, const char* ip)
+int GameServer::ProcessTheater(std::list<Packet*>* queue, Packet* packet, char* type, const char* ip)
 {
 	Packet* sendPacket = NULL;
 	int state = NORMAL;
@@ -667,8 +667,8 @@ int GameServer::ProcessTheater(list<Packet*>* queue, Packet* packet, char* type,
 		sendPacket = new Packet("CGAM", 0x00000000);
 		sendPacket->SetVar("TID", ++sock_tid);
 
-		game.key = new string[GAMES_SIZE];
-		game.gdet = new string[GDET_SIZE];	//we need to allocate the space for gdet here as well before adding it to database!!
+		game.key = new std::string[GAMES_SIZE];
+		game.gdet = new std::string[GDET_SIZE];	//we need to allocate the space for gdet here as well before adding it to database!!
 		//(otherwise the pointer stored in the database will not point to the same location)
 
 		if(!fw->isEmuLocal())   // was a public IP defined?
@@ -712,7 +712,7 @@ int GameServer::ProcessTheater(list<Packet*>* queue, Packet* packet, char* type,
 			game.key[PUNKBUSTER_VERSION] = "";
 		game.key[PLATFORM] = platform;
 		game.key[REGION] = "";
-		string serverVersion = packet->GetVar("B-version");
+		std::string serverVersion = packet->GetVar("B-version");
 		if(fw->emuCfg().global_server_version.compare("false") != 0)
 			serverVersion = fw->emuCfg().global_server_version;
 		game.key[VERSION] = serverVersion;
@@ -726,7 +726,7 @@ int GameServer::ProcessTheater(list<Packet*>* queue, Packet* packet, char* type,
 		game.key[SGUID] = "";
 		game.key[HASH] = "";
 		game.key[PROVIDER] = "";
-		string ugid = packet->GetVar("UGID");
+		std::string ugid = packet->GetVar("UGID");
 		game.key[UGID] = ugid;
 		game.key[TYPE] = packet->GetVar("TYPE");
 		game.key[JOIN] = packet->GetVar("JOIN");
@@ -757,7 +757,7 @@ int GameServer::ProcessTheater(list<Packet*>* queue, Packet* packet, char* type,
 	{
 		for(int i = 4; i < GAMES_SIZE; i++)		//the first 4 values are never updated (ip and port stuff) so we never have to check for them
 		{
-			string value = packet->GetVar(ServerCoreInfo[i]);
+			std::string value = packet->GetVar(ServerCoreInfo[i]);
 			if(!value.empty())
 					game.key[i] = value;
 		}
@@ -781,7 +781,7 @@ int GameServer::ProcessTheater(list<Packet*>* queue, Packet* packet, char* type,
 
 		for(int i = 0; i < GDET_SIZE; i++)		//the first 4 values are never updated (ip and port stuff) so we never have to check for them
 		{
-			string value = packet->GetVar(ServerGdetInfo[i]);
+			std::string value = packet->GetVar(ServerGdetInfo[i]);
 			if(!value.empty())
 			{
 				game.gdet[i] = value;
@@ -792,8 +792,8 @@ int GameServer::ProcessTheater(list<Packet*>* queue, Packet* packet, char* type,
 
 		if(updateDescription)		//there are descriptions to get, check how many and write them into database
 		{
-			int descriptionCount = lexical_cast<int>(game.gdet[SERVER_DESCRIPTION]);
-			string description = "";
+			int descriptionCount = boost::lexical_cast<int>(game.gdet[SERVER_DESCRIPTION]);
+			std::string description = "";
 			for(int i = 0; i < descriptionCount; i++)
 			{
 				char buffer[24];
@@ -825,8 +825,8 @@ int GameServer::ProcessTheater(list<Packet*>* queue, Packet* packet, char* type,
 		if(packet->GetVar("ALLOWED").compare("1") == 0)		// update player count on server
 		{
 			// joining_players++
-			int joining_players = lexical_cast<int>(game.key[JOINING_PLAYERS])+1;
-			game.key[JOINING_PLAYERS] = lexical_cast<string>(joining_players);
+			int joining_players = boost::lexical_cast<int>(game.key[JOINING_PLAYERS])+1;
+			game.key[JOINING_PLAYERS] = boost::lexical_cast<std::string>(joining_players);
 		}
 		sendPacket->SetVar("TID", ++sock_tid);
 		queue->push_back(sendPacket);
@@ -835,13 +835,13 @@ int GameServer::ProcessTheater(list<Packet*>* queue, Packet* packet, char* type,
 	else if(strcmp(type, "PENT") == 0) // entitle player?
 	{
 		// joining_players--
-		int player_count = lexical_cast<int>(game.key[JOINING_PLAYERS])-1;
+		int player_count = boost::lexical_cast<int>(game.key[JOINING_PLAYERS])-1;
 		if(player_count >= 0)
-			game.key[JOINING_PLAYERS] = lexical_cast<string>(player_count);
+			game.key[JOINING_PLAYERS] = boost::lexical_cast<std::string>(player_count);
 
 		// active_players++
-		player_count = lexical_cast<int>(game.key[ACTIVE_PLAYERS])+1;
-		game.key[ACTIVE_PLAYERS] = lexical_cast<string>(player_count);
+		player_count = boost::lexical_cast<int>(game.key[ACTIVE_PLAYERS])+1;
+		game.key[ACTIVE_PLAYERS] = boost::lexical_cast<std::string>(player_count);
 
 		sendPacket = new Packet("PENT", 0x00000000);
 		sendPacket->SetVar("TID", ++sock_tid);
@@ -858,9 +858,9 @@ int GameServer::ProcessTheater(list<Packet*>* queue, Packet* packet, char* type,
 		queue->push_back(sendPacket);
 
 		// active_players--
-		int active_players = lexical_cast<int>(game.key[ACTIVE_PLAYERS])-1;
+		int active_players = boost::lexical_cast<int>(game.key[ACTIVE_PLAYERS])-1;
 		if(active_players >= 0)
-			game.key[ACTIVE_PLAYERS] = lexical_cast<string>(active_players);
+			game.key[ACTIVE_PLAYERS] = boost::lexical_cast<std::string>(active_players);
 
 		sendPacket = new Packet("PLVT", 0x00000000);
 		sendPacket->SetVar("TID", ++sock_tid);

@@ -8,7 +8,6 @@
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/ordered_index.hpp>
 #include <boost/multi_index/member.hpp>
-using namespace boost::multi_index;
 
 //////////////////////////////////////////
 // Database tables represented as enums //
@@ -74,7 +73,7 @@ enum {
 
 	GAMES_SIZE
 };
-const string games_text[GAMES_SIZE] =
+const std::string games_text[GAMES_SIZE] =
 {
 	"ip", "port", "int_ip", "int_port", "name", "level", "active_players", "max_players", "queue_length", "joining_players",
 	"game_mode", "softcore", "hardcore", "has_password", "ea", "game_mod", "time", "punkbuster", "punkbuster_version", "platform",
@@ -132,7 +131,7 @@ enum {
 
 	GDET_SIZE
 };
-const string gdet_text[GDET_SIZE] =
+const std::string gdet_text[GDET_SIZE] =
 {
 	"auto_balance", "banner_url", "crosshair", "friendly_fire", "killcam", "minimap", "minimap_spotting", "server_description", "3rd_person_vehicle_cam", "3d_spotting",
 	"pdat00", "pdat01", "pdat02", "pdat03", "pdat04", "pdat05", "pdat06", "pdat07", "pdat08", "pdat09", "pdat10", "pdat11", "pdat12", "pdat13", "pdat14", "pdat15",
@@ -151,7 +150,7 @@ enum{
 
 	PERSONA_SIZE
 };
-const string personas_text[PERSONA_SIZE] = {"user_id", "user_email", "player_id", "online"};
+const std::string personas_text[PERSONA_SIZE] = {"user_id", "user_email", "player_id", "online"};
 
 // users
 enum{
@@ -165,7 +164,7 @@ enum{
 
 	USER_SIZE
 };
-const string users_text[USER_SIZE] = {"password", "country", "birthday", "online"};
+const std::string users_text[USER_SIZE] = {"password", "country", "birthday", "online"};
 
 // types
 enum{
@@ -176,48 +175,48 @@ enum{
 
 struct list_entry{
 	int id;
-	string name;
-	string* data;
+	std::string name;
+	std::string* data;
 };
 struct linked_key{
 	int id;
-	string key;
+	std::string key;
 };
 struct GamesEntry{
-	string* key;	//[GAMES_SIZE]
-	string* gdet;	//[GDET_SIZE]
+	std::string* key;	//[GAMES_SIZE]
+	std::string* gdet;	//[GDET_SIZE]
 };
 
-typedef multi_index_container<list_entry,
-	indexed_by<
-		ordered_unique< tag<int>, BOOST_MULTI_INDEX_MEMBER(list_entry, int, id)>,				//id
-		ordered_unique< tag<string>, BOOST_MULTI_INDEX_MEMBER(list_entry, string, name)>,		//name
-		ordered_non_unique< tag<string*>, BOOST_MULTI_INDEX_MEMBER(list_entry, string*, data)>	//data
+typedef boost::multi_index_container<list_entry,
+	boost::multi_index::indexed_by<
+	boost::multi_index::ordered_unique< boost::multi_index::tag<int>, BOOST_MULTI_INDEX_MEMBER(list_entry, int, id)>,				//id
+	boost::multi_index::ordered_unique< boost::multi_index::tag<std::string>, BOOST_MULTI_INDEX_MEMBER(list_entry, std::string, name)>,		//name
+	boost::multi_index::ordered_non_unique< boost::multi_index::tag<std::string*>, BOOST_MULTI_INDEX_MEMBER(list_entry, std::string*, data)>	//data
 	>
 >table;
 
 class Database
 {
 	private:
-		string personasData, usersData;
-		vector<GamesEntry> games;
-		list<int> availableGameSlots;
+		std::string personasData, usersData;
+		std::vector<GamesEntry> games;
+		std::list<int> availableGameSlots;
 
 		int lobby_num_games;	//this is not games.size() since there could be free entries, this is the real number of games
-		string* lobby;			//we only have one lobby and we keep its values constant
+		std::string* lobby;			//we only have one lobby and we keep its values constant
 
 		table personas, users;
 		typedef table::index<int>::type list_id;
-		typedef table::index<string>::type list_string;
-		list<int> availableUserSlots;
-		list<int> availablePersonaSlots;
+		typedef table::index<std::string>::type list_string;
+		std::list<int> availableUserSlots;
+		std::list<int> availablePersonaSlots;
 		int highestUserId, highestPersonaId;
 
 		bool extended_info;
 		void initializeData();
-		list<linked_key> lkeys_assigned;
+		std::list<linked_key> lkeys_assigned;
 		bool loadFileData(const char* file, int struct_type);
-		bool saveFileData(string file, string data);
+		bool saveFileData(std::string file, std::string data);
 
 	public:
 		Database(bool extended_info);
@@ -226,20 +225,20 @@ class Database
 
 		int addUser(list_entry user);			// no need to return id, just return if successful
 		bool getUser(int id, list_entry* user);
-		bool getUser(string name, list_entry* user);
+		bool getUser(std::string name, list_entry* user);
 
 		int addPersona(list_entry persona);		// no need to return id, just return if successful
-		void removePersona(string name);
+		void removePersona(std::string name);
 		bool getPersona(int id, list_entry* persona);
-		bool getPersona(string name, list_entry* persona);
+		bool getPersona(std::string name, list_entry* persona);
 
 		int addGame(GamesEntry game);
 		void removeGame(int id);
 		bool isValidGid(int id);
-		string* getGameData(int id, bool gdet);
+		std::string* getGameData(int id, bool gdet);
 
 		void personaLogin(linked_key persona);
-		int theaterLogin(string lkey);
+		int theaterLogin(std::string lkey);
 
 		//will we ever need these?
 		/*bool setUserData(int id, int index, string data);
@@ -248,13 +247,13 @@ class Database
 		bool setPersonaData(string name, int index, string data);
 		bool setGameData(int id, int index, string data, bool gdet);*/
 
-		void listMatchingPersonas(int index, string searchTerm, list<list_entry>* filtered);
-		void listMatchingGames(list<linked_key>* filters, list<int>* filtered, bool returnFirst = false);
-		void listAllGames(list<int>* allGames);
+		void listMatchingPersonas(int index, std::string searchTerm, std::list<list_entry>* filtered);
+		void listMatchingGames(std::list<linked_key>* filters, std::list<int>* filtered, bool returnFirst = false);
+		void listAllGames(std::list<int>* allGames);
 
-		string gameToString(int id, const char* state, GamesEntry* game, bool gdet);	//dont really need id but its nice to be able to log it (don't want to use games list too much)
-		string listEntryToString(list_entry* entry, const char* state, bool user);
+		std::string gameToString(int id, const char* state, GamesEntry* game, bool gdet);	//dont really need id but its nice to be able to log it (don't want to use games list too much)
+		std::string listEntryToString(list_entry* entry, const char* state, bool user);
 
-		string getLobbyInfo(int index);
+		std::string getLobbyInfo(int index);
 		int getLobbyGames();
 };

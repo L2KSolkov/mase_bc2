@@ -4,21 +4,21 @@
 class Stats
 {
 	private:
-		string email, persona, path, dogtagPath, data, dogtags;
+		std::string email, persona, path, dogtagPath, data, dogtags;
 
 	public:
 		Stats();
-		Stats(string email, string persona, bool createNew = false, bool initOnly = false);
+		Stats(std::string email, std::string persona, bool createNew = false, bool initOnly = false);
 
 		struct dogtag
 		{
-			string id;
-			string data;
+			std::string id;
+			std::string data;
 		};
 
 		void saveStats();
-		string getKey(string key);
-		bool setKey(string key, string value, bool ignore_warning = false);
+		std::string getKey(std::string key);
+		bool setKey(std::string key, std::string value, bool ignore_warning = false);
 		bool isEmpty();
 
 		int loadDogtags();					// returns number of dogtags for persona

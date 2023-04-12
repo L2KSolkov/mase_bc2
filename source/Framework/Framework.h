@@ -26,7 +26,7 @@ class Framework
 		int maxAllowedServers, maxAllowedClients;
 		bool logDatabase, emuLocal;
 
-		list<serverConnectionInfo> serverJoinableList;
+		std::list<serverConnectionInfo> serverJoinableList;
 		emulatorSettings emuSettings;
 		connectionSettings ports;
 
@@ -38,9 +38,9 @@ class Framework
 	public:
 		Framework(emulatorSettings emuSettings, connectionSettings ports, bool logDatabase);
 
-		string getTime();
-		string randomString(int len, int seed_type);
-		void convertHtml(string* data);
+		std::string getTime();
+		std::string randomString(int len, int seed_type);
+		void convertHtml(std::string* data);
 
 		bool DatabaseLogging();
 		void checkFiles();
@@ -52,8 +52,8 @@ class Framework
 		bool addConnection(int type);
 		void subtractConnection(int type);
 
-		void resolveEmuIp(asio::io_service* io_service);
-		bool isIpLocal(string ip);
+		void resolveEmuIp(boost::asio::io_service* io_service);
+		bool isIpLocal(std::string ip);
 		bool isEmuLocal();
 		emulatorSettings emuCfg();
 		connectionSettings portsCfg();

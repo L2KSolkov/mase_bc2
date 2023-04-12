@@ -6,7 +6,7 @@ extern Logger* debug;
 Database::Database(bool extended_info)
 {
 	lobby_num_games = 0;
-	lobby = new string[LOBBY_SIZE];
+	lobby = new std::string[LOBBY_SIZE];
 	lobby[LOBBY_ID] = "1";
 	lobby[LOBBY_NAME] = "bfbc2_01";
 	lobby[LOBBY_LOCALE] = "en_US";
@@ -20,7 +20,7 @@ Database::~Database()
 {
 	delete[] lobby;
 
-	for(vector<GamesEntry>::iterator it = games.begin(); it != games.end(); it++)
+	for(std::vector<GamesEntry>::iterator it = games.begin(); it != games.end(); it++)
 	{
 		if(it->key)
 			delete[] it->key;
@@ -35,7 +35,7 @@ Database::~Database()
 void Database::initializeData()
 {
 	// these entries are always there (game servers login with them)
-	list_entry server_persona = {1, "bfbc2.server.p", new string[PERSONA_SIZE]};
+	list_entry server_persona = {1, "bfbc2.server.p", new std::string[PERSONA_SIZE]};
 	server_persona.data[USER_ID] = "1";
 	server_persona.data[USER_EMAIL] = "bfbc2.server.pc@ea.com";
 	server_persona.data[PLAYER_ID] = "0";
@@ -44,7 +44,7 @@ void Database::initializeData()
 
 	server_persona.id = 2;
 	server_persona.name = "bfbc.server.ps";
-	server_persona.data = new string[PERSONA_SIZE];
+	server_persona.data = new std::string[PERSONA_SIZE];
 	server_persona.data[USER_ID] = "2";
 	server_persona.data[USER_EMAIL] = "bfbc.server.ps3@ea.com";
 	server_persona.data[PLAYER_ID] = "0";
@@ -53,7 +53,7 @@ void Database::initializeData()
 
 	server_persona.id = 3;
 	server_persona.name = "bfbc.server.xe";
-	server_persona.data = new string[PERSONA_SIZE];
+	server_persona.data = new std::string[PERSONA_SIZE];
 	server_persona.data[USER_ID] = "3";
 	server_persona.data[USER_EMAIL] = "bfbc.server.xenon@ea.com";
 	server_persona.data[PLAYER_ID] = "0";
@@ -61,7 +61,7 @@ void Database::initializeData()
 	personas.insert(server_persona);
 
 
-	list_entry server_user = {1, "bfbc2.server.pc@ea.com", new string[USER_SIZE]};
+	list_entry server_user = {1, "bfbc2.server.pc@ea.com", new std::string[USER_SIZE]};
 	server_user.data[PASSWORD] = "Che6rEPA";
 	server_user.data[COUNTRY] = "";
 	server_user.data[BIRTHDAY] = "";
@@ -70,7 +70,7 @@ void Database::initializeData()
 
 	server_user.id = 2;
 	server_user.name = "bfbc.server.ps3@ea.com";
-	server_user.data = new string[USER_SIZE];
+	server_user.data = new std::string[USER_SIZE];
 	server_user.data[PASSWORD] = "zAmeH7bR";
 	server_user.data[COUNTRY] = "";
 	server_user.data[BIRTHDAY] = "";
@@ -79,14 +79,14 @@ void Database::initializeData()
 
 	server_user.id = 3;
 	server_user.name = "bfbc.server.xenon@ea.com";
-	server_user.data = new string[USER_SIZE];
+	server_user.data = new std::string[USER_SIZE];
 	server_user.data[PASSWORD] = "B8ApRavE";
 	server_user.data[COUNTRY] = "";
 	server_user.data[BIRTHDAY] = "";
 	server_user.data[USER_ONLINE] = "1";
 	users.insert(server_user);
 
-	string directory = "./database/users.lst";
+	std::string directory = "./database/users.lst";
 	if(!loadFileData(directory.c_str(), USERS))
 		debug->notification(3, DATABASE, "Could not load users table from \"%s\", using an empty table for both users and personas instead.", directory.c_str());
 	else
@@ -100,7 +100,7 @@ void Database::initializeData()
 
 void Database::saveDatabase()
 {
-	stringstream buffer;
+	std::stringstream buffer;
 	bool idsAvailable = false;
 	while(!availableUserSlots.empty())
 	{
@@ -165,26 +165,26 @@ void Database::saveDatabase()
 bool Database::loadFileData(const char* file, int struct_type)
 {
 	bool loadSuccess = true;
-	string tempPath = file;
+	std::string tempPath = file;
 	tempPath.append(".tmp");
 
 	// make a temporary backup of the .lst file (in case something goes wrong, or is this overcautious?)
-	filesystem::path source_file(file), dest_file(tempPath);
-	if(!filesystem::exists(source_file))
+	boost::filesystem::path source_file(file), dest_file(tempPath);
+	if(!boost::filesystem::exists(source_file))
 	{
 		debug->warning(1, DATABASE, "There is a problem opening the file %s", file);
 		return false;
 	}
-	filesystem::copy_file(source_file, dest_file);
+	boost::filesystem::copy_file(source_file, dest_file);
 
 	// open the actual .lst file
-	ifstream in(file, ifstream::in);
+	std::ifstream in(file, std::ifstream::in);
 	if(!in.is_open() || !in.good())
 		return false;
 
-	stringstream buffer;
+	std::stringstream buffer;
 	buffer << in.rdbuf();
-	string list = buffer.str();
+	std::string list = buffer.str();
 	in.close();
 
 	if(struct_type == USERS)
@@ -194,14 +194,14 @@ bool Database::loadFileData(const char* file, int struct_type)
 
 	// first line contains available id's in the list, if there is no first line the next available id is list.size()+1
 	size_t start = 0, current = 0, end = list.find("\n\n", start);
-	if(end != string::npos)
+	if(end != std::string::npos)
 	{
-		string header = list.substr(start, end-start);
+		std::string header = list.substr(start, end-start);
 		current = header.find('|', start);
 
-		while(current < header.size() && current != string::npos)
+		while(current < header.size() && current != std::string::npos)
 		{
-			int id = lexical_cast<int>(header.substr(start, current-start));
+			int id = boost::lexical_cast<int>(header.substr(start, current-start));
 
 			if(struct_type == USERS)
 				availableUserSlots.push_back(id);
@@ -222,17 +222,17 @@ bool Database::loadFileData(const char* file, int struct_type)
 	else
 		count = USER_SIZE;
 
-	while(end != string::npos)
+	while(end != std::string::npos)
 	{
-		string line = list.substr(current, end-current);
+		std::string line = list.substr(current, end-current);
 		start = 0;
 		list_entry row;
 
 		end = line.find('\f', start);
-		if(end == string::npos)
+		if(end == std::string::npos)
 			end = line.size();
 
-		row.id = lexical_cast<int>(line.substr(start, end-start));
+		row.id = boost::lexical_cast<int>(line.substr(start, end-start));
 		if(struct_type == USERS && row.id > highestUserId)
 			highestUserId = row.id;
 		else if(struct_type == PERSONAS && row.id > highestPersonaId)
@@ -242,25 +242,25 @@ bool Database::loadFileData(const char* file, int struct_type)
 		if(start < line.size())
 		{
 			end = line.find('\f', start);
-			if(end == string::npos)
+			if(end == std::string::npos)
 				end = line.size();
 			row.name = line.substr(start, end-start);
 			start = end+1;
 
 			if(struct_type == USERS)
-				row.data = new string[USER_SIZE];
+				row.data = new std::string[USER_SIZE];
 			else
-				row.data = new string[PERSONA_SIZE];
+				row.data = new std::string[PERSONA_SIZE];
 
 			for(int i = 0; i < count; i++)
 			{
 				if(start < line.size())
 				{
 					end = line.find('\f', start);
-					if(end == string::npos)
+					if(end == std::string::npos)
 						end = line.size();
 
-					string value = line.substr(start, end-start);
+					std::string value = line.substr(start, end-start);
 					row.data[i] = value;
 
 					start = end+1;
@@ -288,7 +288,7 @@ bool Database::loadFileData(const char* file, int struct_type)
 		end = list.find('\n', current);
 	}
 	if(loadSuccess)
-		filesystem::remove(dest_file);	// everything went fine, remove the temporary backup again
+		boost::filesystem::remove(dest_file);	// everything went fine, remove the temporary backup again
 
 	// recheck if there is no id higher than highestId in the availableId list, if so fix the list
 	buffer.str("");
@@ -321,7 +321,7 @@ bool Database::loadFileData(const char* file, int struct_type)
 				tempList.pop_front();
 			}
 			size_t pos = personasData.find("\n\n");	// this should always be there if the id list is not empty
-			if(pos != string::npos)
+			if(pos != std::string::npos)
 				personasData.replace(0, pos, buffer.str());
 			else
 				debug->warning(1, DATABASE, "%s seems to contain bad data!", file);
@@ -353,7 +353,7 @@ bool Database::loadFileData(const char* file, int struct_type)
 				tempList.pop_front();
 			}
 			size_t pos = usersData.find("\n\n");	// this should always be there if the id list is not empty
-			if(pos != string::npos)
+			if(pos != std::string::npos)
 				usersData.replace(0, pos, buffer.str());
 			else
 				debug->warning(1, DATABASE, "%s seems to contain bad data!", file);
@@ -363,22 +363,22 @@ bool Database::loadFileData(const char* file, int struct_type)
 	return true;
 }
 
-bool Database::saveFileData(string file, string data)
+bool Database::saveFileData(std::string file, std::string data)
 {
 	bool done = false;
-	string tempPath = file;
+	std::string tempPath = file;
 	tempPath.append(".tmp");
 
 	// make a temporary backup of the .lst file (in case something goes wrong, or is this overcautious?)
-	filesystem::path source_file(file), dest_file(tempPath);
-	if(!filesystem::exists(source_file))
+	boost::filesystem::path source_file(file), dest_file(tempPath);
+	if(!boost::filesystem::exists(source_file))
 	{
 		debug->warning(1, DATABASE, "There is a problem opening the file %s", file.c_str());
 		return false;
 	}
-	filesystem::copy_file(source_file, dest_file);
+	boost::filesystem::copy_file(source_file, dest_file);
 
-	ofstream destFile(file, ofstream::out | ofstream::trunc);	// we delete all content, is it safe to do this?
+	std::ofstream destFile(file, std::ofstream::out | std::ofstream::trunc);	// we delete all content, is it safe to do this?
 	if(destFile.is_open() && destFile.good())
 	{
 		destFile.write(data.c_str(), data.size());
@@ -389,7 +389,7 @@ bool Database::saveFileData(string file, string data)
 	if(!done)
 		debug->warning(1, DATABASE, "A problem occured when saving %s with the data:\n==begin==\n%s\n==end==\n", file.c_str(), data.c_str());
 	else
-		filesystem::remove(dest_file);	// everything went fine, remove the temporary backup again
+		boost::filesystem::remove(dest_file);	// everything went fine, remove the temporary backup again
 
 	return done;
 }
@@ -406,7 +406,7 @@ int Database::addUser(list_entry user)
 		availableUserSlots.pop_front();
 	}
 
-	pair<table::iterator, bool> success = users.insert(user);
+	std::pair<table::iterator, bool> success = users.insert(user);
 	if(!success.second)
 	{
 		debug->notification(3, DATABASE, "User ID %i with name %s could not be added to database (name already exists in database?)", user.id, user.name.c_str());
@@ -419,7 +419,7 @@ int Database::addUser(list_entry user)
 		{
 			// fileUsers, usersData
 			size_t pos = 0;
-			string searchString = lexical_cast<string>(user.id);
+			std::string searchString = boost::lexical_cast<std::string>(user.id);
 			searchString.append("|");
 			if((pos = usersData.find(searchString)) > 0 && usersData[pos-1] != '|')	// is the result the correct one or should we search again?
 			{
@@ -428,7 +428,7 @@ int Database::addUser(list_entry user)
 				idFlag = false;
 			}
 
-			if(pos != string::npos)		// no need to delete anything if there is nothing (though that shouldn't be)
+			if(pos != std::string::npos)		// no need to delete anything if there is nothing (though that shouldn't be)
 			{
 				size_t end = pos+searchString.length();
 				if(!idFlag)
@@ -440,7 +440,7 @@ int Database::addUser(list_entry user)
 		}
 
 		// id updating done, now add (append?) the actual entry
-		usersData.append(lexical_cast<string>(user.id));
+		usersData.append(boost::lexical_cast<std::string>(user.id));
 		usersData.append("\f");
 		usersData.append(user.name);
 		usersData.append("\f");
@@ -450,7 +450,7 @@ int Database::addUser(list_entry user)
 		usersData.append("\f");
 		usersData.append(user.data[BIRTHDAY]);
 		usersData.append("\f0\n");		// this value is resetted when reconnecting anyway, no need to save the real value
-		ofstream fileUsers("./database/users.lst", ofstream::out | ofstream::trunc);
+		std::ofstream fileUsers("./database/users.lst", std::ofstream::out | std::ofstream::trunc);
 		fileUsers.write(usersData.c_str(), usersData.size());
 		fileUsers.close();
 
@@ -480,9 +480,9 @@ bool Database::getUser(int id, list_entry* user)
 	}
 }
 
-bool Database::getUser(string name, list_entry* user)
+bool Database::getUser(std::string name, list_entry* user)
 {
-	const list_string &ls = users.get<string>();
+	const list_string &ls = users.get<std::string>();
 	list_string::iterator it = ls.find(name);
 	if(it != ls.end())
 	{
@@ -513,7 +513,7 @@ int Database::addPersona(list_entry persona)
 		availablePersonaSlots.pop_front();
 	}
 
-	pair<table::iterator, bool> success = personas.insert(persona);
+	std::pair<table::iterator, bool> success = personas.insert(persona);
 	if(!success.second)
 	{
 		debug->notification(3, DATABASE, "Persona ID %i with name %s could not be added to database (name already exists in database?)", persona.id, persona.name.c_str());
@@ -526,7 +526,7 @@ int Database::addPersona(list_entry persona)
 		{
 			// filePersonas, personasData
 			size_t pos = 0;
-			string searchString = lexical_cast<string>(persona.id);
+			std::string searchString = boost::lexical_cast<std::string>(persona.id);
 			searchString.append("|");
 			if((pos = personasData.find(searchString)) > 0 && personasData[pos-1] != '|')	// is the result the correct one or should we search again?
 			{
@@ -535,7 +535,7 @@ int Database::addPersona(list_entry persona)
 				idFlag = false;
 			}
 
-			if(pos != string::npos)		// no need to delete anything if there is nothing (though that shouldn't be)
+			if(pos != std::string::npos)		// no need to delete anything if there is nothing (though that shouldn't be)
 			{
 				size_t end = pos+searchString.length();
 				if(!idFlag)
@@ -550,7 +550,7 @@ int Database::addPersona(list_entry persona)
 			highestPersonaId = persona.id;
 
 		// id updating done, now add (append?) the actual entry
-		personasData.append(lexical_cast<string>(persona.id));
+		personasData.append(boost::lexical_cast<std::string>(persona.id));
 		personasData.append("\f");
 		personasData.append(persona.name);
 		personasData.append("\f");
@@ -558,7 +558,7 @@ int Database::addPersona(list_entry persona)
 		personasData.append("\f");
 		personasData.append(persona.data[USER_EMAIL]);
 		personasData.append("\f0\f0\n");	// these 2 values are resetted when reconnecting anyway, no need to save the real values
-		ofstream filePersonas("./database/personas.lst", ofstream::out | ofstream::trunc);
+		std::ofstream filePersonas("./database/personas.lst", std::ofstream::out | std::ofstream::trunc);
 		filePersonas.write(personasData.c_str(), personasData.size());
 		filePersonas.close();
 
@@ -566,9 +566,9 @@ int Database::addPersona(list_entry persona)
 	}
 }
 
-void Database::removePersona(string name)
+void Database::removePersona(std::string name)
 {
-	list_string& ls = personas.get<string>();
+	list_string& ls = personas.get<std::string>();
 	list_string::iterator it = ls.find(name);
 	if(it != ls.end())
 	{
@@ -577,12 +577,12 @@ void Database::removePersona(string name)
 		ls.erase(it);
 
 		size_t pos = 0;
-		string searchString = lexical_cast<string>(id);
+		std::string searchString = boost::lexical_cast<std::string>(id);
 		if(id < highestPersonaId)					// <= because we already erased the entry here
 		{
 			availablePersonaSlots.push_back(id);	// save id (only if it's not the last one) so we know which ones are usable
 			// save id also in file
-			if((pos = personasData.find("\n\n")) != string::npos)	// there must be only one occurence of this
+			if((pos = personasData.find("\n\n")) != std::string::npos)	// there must be only one occurence of this
 			{
 				searchString.append("|");
 				personasData.insert(pos, searchString);
@@ -594,7 +594,7 @@ void Database::removePersona(string name)
 		else if(id == highestPersonaId)
 		{
 			bool countDown = true;
-			for(list<int>::iterator iter = availablePersonaSlots.begin(); iter != availablePersonaSlots.end(); iter++)
+			for(std::list<int>::iterator iter = availablePersonaSlots.begin(); iter != availablePersonaSlots.end(); iter++)
 			{
 				if((*iter) == highestPersonaId-1)
 				{
@@ -616,19 +616,19 @@ void Database::removePersona(string name)
 		{
 			searchString.insert(searchString.begin(), '\n');
 			pos = personasData.find(searchString, pos-1);
-			if(pos != string::npos)
+			if(pos != std::string::npos)
 				pos++;	// better to do this here
 		}
 
-		if(pos != string::npos)
+		if(pos != std::string::npos)
 		{
 			size_t end = personasData.find('\n', pos)+1;	// we want the \n also removed
-			if(end != string::npos)
+			if(end != std::string::npos)
 				personasData.erase(pos, end-pos);
 			else
 				debug->warning(3, DATABASE, "removePersona() something is wrong with Persona %s in file data!", name.c_str());
 		}
-		ofstream filePersonas("./database/personas.lst", ofstream::out | ofstream::trunc);
+		std::ofstream filePersonas("./database/personas.lst", std::ofstream::out | std::ofstream::trunc);
 		filePersonas.write(personasData.c_str(), personasData.size());
 		filePersonas.close();
 		debug->notification(3, DATABASE, "Persona %s with ID %i was removed from database", name.c_str(), id);
@@ -658,9 +658,9 @@ bool Database::getPersona(int id, list_entry* persona)
 	}
 }
 
-bool Database::getPersona(string name, list_entry* persona)
+bool Database::getPersona(std::string name, list_entry* persona)
 {
-	const list_string &ls = personas.get<string>();
+	const list_string &ls = personas.get<std::string>();
 	list_string::iterator it = ls.find(name);
 	if(it != ls.end())
 	{
@@ -680,7 +680,7 @@ bool Database::getPersona(string name, list_entry* persona)
 }
 
 /*
-bool Database::setUserData(int id, int index, string data)
+bool Database::setUserData(int id, int index, std::string data)
 {
 	const list_id &li = users.get<int>();
 	list_id::iterator it = li.find(id);
@@ -696,9 +696,9 @@ bool Database::setUserData(int id, int index, string data)
 	}
 }
 
-bool Database::setUserData(string name, int index, string data)
+bool Database::setUserData(std::string name, int index, std::string data)
 {
-	const list_string &ls = users.get<string>();
+	const list_string &ls = users.get<std::string>();
 	list_string::iterator it = ls.find(name);
 	if(it != ls.end())
 	{
@@ -712,7 +712,7 @@ bool Database::setUserData(string name, int index, string data)
 	}
 }
 
-bool Database::setPersonaData(int id, int index, string data)
+bool Database::setPersonaData(int id, int index, std::string data)
 {
 	const list_id &li = personas.get<int>();
 	list_id::iterator it = li.find(id);
@@ -728,9 +728,9 @@ bool Database::setPersonaData(int id, int index, string data)
 	}
 }
 
-bool Database::setPersonaData(string name, int index, string data)
+bool Database::setPersonaData(std::string name, int index, std::string data)
 {
-	const list_string &ls = personas.get<string>();
+	const list_string &ls = personas.get<std::string>();
 	list_string::iterator it = ls.find(name);
 	if(it != ls.end())
 	{
@@ -744,7 +744,7 @@ bool Database::setPersonaData(string name, int index, string data)
 	}
 }
 
-bool Database::setGameData(int id, int index, string data, bool gdet)
+bool Database::setGameData(int id, int index, std::string data, bool gdet)
 {
 	if(id <= 0 || id > (int)games.size())
 	{
@@ -762,9 +762,9 @@ bool Database::setGameData(int id, int index, string data, bool gdet)
 }
 */
 
-void Database::listMatchingPersonas(int index, string searchTerm, list<list_entry>* filtered)
+void Database::listMatchingPersonas(int index, std::string searchTerm, std::list<list_entry>* filtered)
 {
-	const list_string &ls = personas.get<string>();
+	const list_string &ls = personas.get<std::string>();
 	list_string::iterator it;
 	for(it = ls.begin(); it != ls.end(); it++)
 	{
@@ -830,7 +830,7 @@ bool Database::isValidGid(int id)
 		return false;
 }
 
-string* Database::getGameData(int id, bool gdet)
+std::string* Database::getGameData(int id, bool gdet)
 {
 	if(isValidGid(id))
 	{
@@ -847,13 +847,13 @@ string* Database::getGameData(int id, bool gdet)
 	}
 }
 
-void Database::listMatchingGames(list<linked_key>* filters, list<int>* filtered, bool returnFirst)
+void Database::listMatchingGames(std::list<linked_key>* filters, std::list<int>* filtered, bool returnFirst)
 {
 	for(int i = 0; i < (int)games.size(); i++)
 	{
 		if(games[i].key)
 		{
-			list<linked_key>::iterator it;
+			std::list<linked_key>::iterator it;
 			bool match = true;
 			bool name_match = false;
 			bool ugid_match = false;
@@ -868,7 +868,7 @@ void Database::listMatchingGames(list<linked_key>* filters, list<int>* filtered,
 					{
 						if(it->key.compare("1") == 0)
 						{
-							int active_players = lexical_cast<int>(games[i].key[ACTIVE_PLAYERS]);
+							int active_players = boost::lexical_cast<int>(games[i].key[ACTIVE_PLAYERS]);
 							if(active_players < 1)
 								match = false;
 						}
@@ -878,8 +878,8 @@ void Database::listMatchingGames(list<linked_key>* filters, list<int>* filtered,
 					{
 						if(it->key.compare("1") == 0)
 						{
-							int active_players = lexical_cast<int>(games[i].key[ACTIVE_PLAYERS]);
-							int max_players = lexical_cast<int>(games[i].key[MAX_PLAYERS]);
+							int active_players = boost::lexical_cast<int>(games[i].key[ACTIVE_PLAYERS]);
+							int max_players = boost::lexical_cast<int>(games[i].key[MAX_PLAYERS]);
 							if(active_players >= max_players)
 								match = false;
 						}
@@ -890,7 +890,7 @@ void Database::listMatchingGames(list<linked_key>* filters, list<int>* filtered,
 						if(!check_name)
 							check_name = true;
 
-						if(games[i].key[SERVER_NAME].find(it->key) != string::npos)
+						if(games[i].key[SERVER_NAME].find(it->key) != std::string::npos)
 							name_match = true;
 						break;
 					}
@@ -948,7 +948,7 @@ void Database::listMatchingGames(list<linked_key>* filters, list<int>* filtered,
 	debug->notification(3, DATABASE, "Found %i games of %i for the set filters", filtered->size(), games.size());
 }
 
-void Database::listAllGames(list<int>* allGames)
+void Database::listAllGames(std::list<int>* allGames)
 {
 	for(int i = 0; i < (int)games.size(); i++)
 	{
@@ -963,9 +963,9 @@ void Database::personaLogin(linked_key persona)
 	lkeys_assigned.push_back(persona);
 }
 
-int Database::theaterLogin(string lkey)
+int Database::theaterLogin(std::string lkey)
 {
-	list<linked_key>::iterator it;
+	std::list<linked_key>::iterator it;
 	for(it = lkeys_assigned.begin(); it != lkeys_assigned.end(); it++)
 	{
 		if(lkey.compare(it->key) == 0)
@@ -979,7 +979,7 @@ int Database::theaterLogin(string lkey)
 	return -1;
 }
 
-string Database::getLobbyInfo(int index)
+std::string Database::getLobbyInfo(int index)
 {
 	return lobby[index];
 }
@@ -989,21 +989,21 @@ int Database::getLobbyGames()
 	return lobby_num_games;
 }
 
-string Database::listEntryToString(list_entry* entry, const char* state, bool user)
+std::string Database::listEntryToString(list_entry* entry, const char* state, bool user)
 {
-	string line = (user) ? "users" : "personas";
+	std::string line = (user) ? "users" : "personas";
 	line.append(" table ");
 	line.append(state);
 	line.append(" id: ");
-	line.append(lexical_cast<string>(entry->id));
+	line.append(boost::lexical_cast<std::string>(entry->id));
 	line.append(", name: ");
 	line.append(entry->name);
 	line.append("\n");
 
 	if(extended_info)
 	{
-		string border = "";
-		string text = "";
+		std::string border = "";
+		std::string text = "";
 
 		if(user)
 		{
@@ -1108,22 +1108,22 @@ string Database::listEntryToString(list_entry* entry, const char* state, bool us
 	return line;
 }
 
-string Database::gameToString(int id, const char* state, GamesEntry* game, bool gdet)
+std::string Database::gameToString(int id, const char* state, GamesEntry* game, bool gdet)
 {
-	string line = (gdet) ? "gdet" : "games";
+	std::string line = (gdet) ? "gdet" : "games";
 	line.append(" table ");
 	line.append(state);
 	line.append(" gid: ");
-	line.append(lexical_cast<string>(id));
+	line.append(boost::lexical_cast<std::string>(id));
 	line.append("\n");
 	//char buffer[36];
 	//sprintf(buffer, "%s table %s gid: %i\n", (gdet) ? "gdet" : "games", state, id);
-	//string line = buffer;
+	//std::string line = buffer;
 
 	if(extended_info)
 	{
-		string border = "";
-		string text = "";
+		std::string border = "";
+		std::string text = "";
 
 		if(!gdet)
 		{

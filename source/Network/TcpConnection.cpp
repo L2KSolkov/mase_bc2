@@ -5,7 +5,7 @@
 extern Logger* debug;
 extern Framework* fw;
 
-TcpConnection::TcpConnection(asio::io_service& io_service, int type, Database* db) : socket_(io_service)
+TcpConnection::TcpConnection(boost::asio::io_service& io_service, int type, Database* db) : socket_(io_service)
 {
 	this->type = type;
 	this->db = db;
@@ -24,15 +24,15 @@ TcpConnection::TcpConnection(asio::io_service& io_service, int type, Database* d
 	special_data_length = 0;
 }
 
-tcp::socket& TcpConnection::socket()
+boost::asio::ip::tcp::socket& TcpConnection::socket()
 {
 	return socket_;
 }
 
 void TcpConnection::start()
 {
-	socket_.async_read_some(asio::buffer(received_data, max_length),
-							boost::bind(&TcpConnection::handle_read, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+	socket_.async_read_some(boost::asio::buffer(received_data, max_length),
+							boost::bind(&TcpConnection::handle_read, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 	remoteIp = getRemoteIp();
 	remotePort = getRemotePort();
 	if(fw->addConnection(type))
@@ -43,7 +43,7 @@ void TcpConnection::start()
 		{
 			debug->notification(1, type, "--[%s:%i] connected", remoteIp.c_str(), remotePort);
 			// check if incoming connection is local or public
-			string emuIp;
+			std::string emuIp;
 			bool isLocal = fw->isIpLocal(remoteIp);
 
 			if(!isLocal)	// and set the emulator ip accordingly
@@ -52,7 +52,7 @@ void TcpConnection::start()
 				emuIp = getLocalIp();
 			client = new GameClient(type, db, emuIp, isLocal);
 		}
-		ping_timer = new asio::deadline_timer((boost::asio::io_context&)(socket_).get_executor().context());
+		ping_timer = new boost::asio::deadline_timer((boost::asio::io_context&)(socket_).get_executor().context());
 	}
 	else if(type != MISC)
 		debug->notification(1, type, "--[%s:%i] Maximum number of allowed connections for this type reached, ignoring connection request...", remoteIp.c_str(), remotePort);
@@ -62,7 +62,7 @@ void TcpConnection::start()
 //////////////////
 // Handle stuff //
 //////////////////
-void TcpConnection::handle_read(const system::error_code& error, size_t bytes_transferred)
+void TcpConnection::handle_read(const boost::system::error_code& error, size_t bytes_transferred)
 {
 	if (!error)
 	{
@@ -107,11 +107,11 @@ void TcpConnection::handle_read(const system::error_code& error, size_t bytes_tr
 			outgoingQueue.pop_front();
 
 			if(!delayed_timer)
-				delayed_timer = new asio::deadline_timer((boost::asio::io_context&)(socket_).get_executor().context(), posix_time::seconds(delayed_packet->getDelayTime()));
+				delayed_timer = new boost::asio::deadline_timer((boost::asio::io_context&)(socket_).get_executor().context(), boost::posix_time::seconds(delayed_packet->getDelayTime()));
 			else
-				delayed_timer->expires_from_now(posix_time::seconds(delayed_packet->getDelayTime()));
+				delayed_timer->expires_from_now(boost::posix_time::seconds(delayed_packet->getDelayTime()));
 
-			delayed_timer->async_wait(boost::bind(&TcpConnection::handle_delayed_send, shared_from_this(), asio::placeholders::error));
+			delayed_timer->async_wait(boost::bind(&TcpConnection::handle_delayed_send, shared_from_this(), boost::asio::placeholders::error));
 			state = SKIP;
 			debug->notification(3, type, "initiating delayed packet, expires in %i seconds...", delayed_timer->expires_from_now().total_seconds());
 		}
@@ -123,13 +123,13 @@ void TcpConnection::handle_read(const system::error_code& error, size_t bytes_tr
 					if(send_data)
 						debug->warning(1, type, "We are overwriting some packet content here!! -> %s", send_data);
 					send_data = PacketToData(outgoingQueue.front());
-					async_write(socket_, asio::buffer(send_data, send_length), boost::bind(&TcpConnection::handle_write, shared_from_this(), asio::placeholders::error));
+					boost::asio::async_write(socket_, boost::asio::buffer(send_data, send_length), boost::bind(&TcpConnection::handle_write, shared_from_this(), boost::asio::placeholders::error));
 					break;
 				}
 			case SKIP:
 				{
-					socket_.async_read_some(asio::buffer(received_data, max_length),
-								boost::bind(&TcpConnection::handle_read, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+					socket_.async_read_some(boost::asio::buffer(received_data, max_length),
+								boost::bind(&TcpConnection::handle_read, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 					break;
 				}
 			case DISCONNECT:
@@ -140,18 +140,18 @@ void TcpConnection::handle_read(const system::error_code& error, size_t bytes_tr
 	}
 	else	//client gets disconnected
 	{
-		if(error.value() != asio::error::eof)
+		if(error.value() != boost::asio::error::eof)
 			debug->warning(1, type, "handle_read() - [%s:%i] error message: %s - error code: %i", remoteIp.c_str(), remotePort, error.message().c_str(), error.value());
 		handle_stop();
 	}
 }
 
-void TcpConnection::handle_write(const system::error_code& error)
+void TcpConnection::handle_write(const boost::system::error_code& error)
 {
 	if(!error)
 	{
 		//packet was sent here
-		string packetData = outgoingQueue.front()->toString();
+		std::string packetData = outgoingQueue.front()->toString();
 		debug->notification(2, type, "->[%s:%i] %s 0x%08x {%s}", remoteIp.c_str(), remotePort, outgoingQueue.front()->GetType(), outgoingQueue.front()->GetType2(), packetData.c_str());
 		send_data = NULL;
 		delete outgoingQueue.front();
@@ -172,11 +172,11 @@ void TcpConnection::handle_write(const system::error_code& error)
 			outgoingQueue.pop_front();
 
 			if(!delayed_timer)
-				delayed_timer = new asio::deadline_timer((boost::asio::io_context&)(socket_).get_executor().context(), posix_time::seconds(delayed_packet->getDelayTime()));
+				delayed_timer = new boost::asio::deadline_timer((boost::asio::io_context&)(socket_).get_executor().context(), boost::posix_time::seconds(delayed_packet->getDelayTime()));
 			else
-				delayed_timer->expires_from_now(posix_time::seconds(delayed_packet->getDelayTime()));
+				delayed_timer->expires_from_now(boost::posix_time::seconds(delayed_packet->getDelayTime()));
 
-			delayed_timer->async_wait(boost::bind(&TcpConnection::handle_delayed_send, shared_from_this(), asio::placeholders::error));
+			delayed_timer->async_wait(boost::bind(&TcpConnection::handle_delayed_send, shared_from_this(), boost::asio::placeholders::error));
 			state = NORMAL;
 			debug->notification(5, type, "initiating delayed packet, expires in %i seconds...", delayed_timer->expires_from_now().total_seconds());
 		}
@@ -185,8 +185,8 @@ void TcpConnection::handle_write(const system::error_code& error)
 		{
 			case NORMAL:
 				{
-					socket_.async_read_some(asio::buffer(received_data, max_length),
-								boost::bind(&TcpConnection::handle_read, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+					socket_.async_read_some(boost::asio::buffer(received_data, max_length),
+								boost::bind(&TcpConnection::handle_read, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 					break;
 				}
 			case QUEUE:
@@ -194,7 +194,7 @@ void TcpConnection::handle_write(const system::error_code& error)
 					if(send_data)
 						debug->warning(1, type, "We are overwriting some packet content here!!! -> %s", send_data);
 					send_data = PacketToData(outgoingQueue.front());
-					async_write(socket_, asio::buffer(send_data, send_length), boost::bind(&TcpConnection::handle_write, shared_from_this(), asio::placeholders::error));
+					async_write(socket_, boost::asio::buffer(send_data, send_length), boost::bind(&TcpConnection::handle_write, shared_from_this(), boost::asio::placeholders::error));
 					break;
 				}
 			case DISCONNECT:
@@ -213,7 +213,7 @@ void TcpConnection::handle_write(const system::error_code& error)
 void TcpConnection::handle_stop()
 {
 	debug->notification(1, type, "--[%s:%i] disconnected", remoteIp.c_str(), remotePort);
-	system::error_code ec;
+	boost::system::error_code ec;
 	if(ping_timer)
 	{
 		ping_timer->cancel(ec);
@@ -236,11 +236,11 @@ void TcpConnection::handle_stop()
 		delete client;
 }
 
-void TcpConnection::handle_one_write(const system::error_code& error)
+void TcpConnection::handle_one_write(const boost::system::error_code& error)
 {
 	if(!error)
 	{
-		string packetData = specialQueue.front()->toString();
+		std::string packetData = specialQueue.front()->toString();
 		debug->notification(2, type, "->[%s:%i] %s 0x%08x {%s}", remoteIp.c_str(), remotePort, specialQueue.front()->GetType(), specialQueue.front()->GetType2(), packetData.c_str());
 		special_data = NULL;
 		delete specialQueue.front();
@@ -250,8 +250,8 @@ void TcpConnection::handle_one_write(const system::error_code& error)
 		{
 			debug->notification(4, type, "handle_one_write() - one-way packet sent, there are still packets in the special queue though, calling handle again...");
 			special_data = PacketToData(specialQueue.front(), true);
-			async_write(socket_, asio::buffer(special_data, special_data_length),
-						boost::bind(&TcpConnection::handle_one_write, shared_from_this(), asio::placeholders::error));
+			async_write(socket_, boost::asio::buffer(special_data, special_data_length),
+						boost::bind(&TcpConnection::handle_one_write, shared_from_this(), boost::asio::placeholders::error));
 		}
 		else
 			debug->notification(5, type, "handle_one_write() - one-way packet sent, getting out of scope...");
@@ -260,7 +260,7 @@ void TcpConnection::handle_one_write(const system::error_code& error)
 		debug->warning(1, type, "handle_one_write() - disconnected, error message: %s - error code: %i", error.message().c_str(), error.value());
 }
 
-void TcpConnection::handle_delayed_send(const system::error_code& error)
+void TcpConnection::handle_delayed_send(const boost::system::error_code& error)
 {
 	if(!error)
 	{
@@ -277,8 +277,8 @@ void TcpConnection::handle_delayed_send(const system::error_code& error)
 				if(special_data)
 					debug->warning(1, type, "We are overwriting some packet content here!! -> %s", special_data);
 				special_data = PacketToData(specialQueue.front(), true);
-				async_write(socket_, asio::buffer(special_data, special_data_length),
-							boost::bind(&TcpConnection::handle_one_write, shared_from_this(), asio::placeholders::error));
+				async_write(socket_, boost::asio::buffer(special_data, special_data_length),
+							boost::bind(&TcpConnection::handle_one_write, shared_from_this(), boost::asio::placeholders::error));
 			}
 		}
 	}
@@ -290,7 +290,7 @@ void TcpConnection::handle_delayed_send(const system::error_code& error)
 	}
 }
 
-void TcpConnection::handle_ping(const system::error_code& error)
+void TcpConnection::handle_ping(const boost::system::error_code& error)
 {
 	if(!error)
 	{
@@ -307,8 +307,8 @@ void TcpConnection::handle_ping(const system::error_code& error)
 				if(special_data)
 					debug->warning(1, type, "We are overwriting some packet content here!! -> %s", special_data);
 				special_data = PacketToData(specialQueue.front(), true);
-				async_write(socket_, asio::buffer(special_data, special_data_length),
-							boost::bind(&TcpConnection::handle_one_write, shared_from_this(), asio::placeholders::error));
+				async_write(socket_, boost::asio::buffer(special_data, special_data_length),
+							boost::bind(&TcpConnection::handle_one_write, shared_from_this(), boost::asio::placeholders::error));
 			}
 		}
 	}
@@ -332,8 +332,8 @@ void TcpConnection::handle_invoke(Packet* sendPacket)
 			if(special_data)
 				debug->warning(1, type, "We are overwriting some packet content here!! -> %s", special_data);
 			special_data = PacketToData(specialQueue.front(), true);
-			async_write(socket_, asio::buffer(special_data, special_data_length),
-						boost::bind(&TcpConnection::handle_one_write, shared_from_this(), asio::placeholders::error));
+			async_write(socket_, boost::asio::buffer(special_data, special_data_length),
+						boost::bind(&TcpConnection::handle_one_write, shared_from_this(), boost::asio::placeholders::error));
 		}
 	}
 }
@@ -358,7 +358,7 @@ void TcpConnection::StoreIncomingData()
 
 			//Create the package and add it to the end of the queue
 			incomingQueue.push_back(new Packet(type, type2, length, (char*)data));
-			string packetData = incomingQueue.back()->toString();
+			std::string packetData = incomingQueue.back()->toString();
 			debug->notification(2, this->type, "<-[%s:%i] %s 0x%08x {%s}", remoteIp.c_str(), remotePort, incomingQueue.back()->GetType(), incomingQueue.back()->GetType2(), packetData.c_str());
 
 			current_length += length;
@@ -374,7 +374,7 @@ void TcpConnection::StoreIncomingData()
 
 char* TcpConnection::PacketToData(Packet* packet, bool is_special)
 {
-	string packetData = packet->GetData();
+	std::string packetData = packet->GetData();
 
 	uint8_t *type1	= (uint8_t*)packet->GetType();
 	uint32_t type2	= (uint32_t)packet->GetType2();
@@ -439,7 +439,7 @@ unsigned int TcpConnection::encode(uint8_t *data, uint32_t num, int bytes)
 //////////////////
 // Socket stuff //
 //////////////////
-string TcpConnection::getLocalIp()
+std::string TcpConnection::getLocalIp()
 {
 	return socket().local_endpoint().address().to_string();
 }
@@ -448,7 +448,7 @@ int TcpConnection::getLocalPort()
 	return socket().local_endpoint().port();
 }
 
-string TcpConnection::getRemoteIp()
+std::string TcpConnection::getRemoteIp()
 {
 	return socket().remote_endpoint().address().to_string();
 }
@@ -471,7 +471,7 @@ void TcpConnection::ProcessGameServer(Packet* receivedPacket)
 
 	if(state == UNKNOWN || state == ERROR_STATE)
 	{
-		string packetData = receivedPacket->toString();
+		std::string packetData = receivedPacket->toString();
 		if(state == UNKNOWN)
 			debug->warning(2, this->type, "Could not handle Packet - %s from [%s:%i]", packetData.c_str(), remoteIp.c_str(), remotePort);
 		debug->notification(5, this->type, "Continue reading, last recieved packet - %s from [%s:%i]", packetData.c_str(), remoteIp.c_str(), remotePort);
@@ -479,7 +479,7 @@ void TcpConnection::ProcessGameServer(Packet* receivedPacket)
 
 	if(strcmp(packet_type, "CGAM") == 0)
 	{
-		serverJoinable.id = lexical_cast<int>(outgoingQueue.front()->GetVar("GID"));
+		serverJoinable.id = boost::lexical_cast<int>(outgoingQueue.front()->GetVar("GID"));
 		serverJoinable.socket = shared_from_this();	//it would be better to just pass socket_ and do the async operation in the client object where we point it to the handler_invoke
 		fw->addJoinableServer(serverJoinable);
 	}
@@ -498,7 +498,7 @@ void TcpConnection::ProcessGameClient(Packet* receivedPacket)
 
 		if(state == UNKNOWN || state == ERROR_STATE)
 		{
-			string packetData = receivedPacket->toString();
+			std::string packetData = receivedPacket->toString();
 			if(state == UNKNOWN)
 				debug->warning(2, this->type, "Could not handle Packet - %s from [%s:%i]", packetData.c_str(), remoteIp.c_str(), remotePort);
 			debug->notification(5, this->type, "Continue reading, last recieved packet - %s from [%s:%i]", packetData.c_str(), remoteIp.c_str(), remotePort);
@@ -510,7 +510,7 @@ void TcpConnection::ProcessGameClient(Packet* receivedPacket)
 	{
 		if(delayed_timer->expires_from_now().total_seconds() > 0)
 		{
-			system::error_code ec;
+			boost::system::error_code ec;
 			delayed_timer->cancel(ec);
 			if(delayed_packet)
 			{
@@ -533,8 +533,8 @@ void TcpConnection::update_ping_timer()
 		else if(duration >= 0 && duration+10 < 150)		// reset the timer
 			duration = 150 + (duration % 10);	// ping intervals seem to be approximately 150 seconds (why did I think it was a good idea to do it like this?)
 
-		ping_timer->expires_from_now(posix_time::seconds(duration));
-		ping_timer->async_wait(boost::bind(&TcpConnection::handle_ping, shared_from_this(), asio::placeholders::error));
+		ping_timer->expires_from_now(boost::posix_time::seconds(duration));
+		ping_timer->async_wait(boost::bind(&TcpConnection::handle_ping, shared_from_this(), boost::asio::placeholders::error));
 	}
 }
 

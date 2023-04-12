@@ -8,19 +8,19 @@ Config::Config()
 
 bool Config::loadConfigFile()
 {
-	ifstream configFile("./config.ini", ifstream::in);
+	std::ifstream configFile("./config.ini", std::ifstream::in);
 	if(configFile.is_open() && configFile.good())
 	{
-		stringstream buffer;
+		std::stringstream buffer;
 		buffer << configFile.rdbuf();
 		data = buffer.str();
 		configFile.close();
 
 		if(!storeValues())
 		{
-			cout << "Failed to load certain values in the config.ini, be sure that EVERY option \nhas a valid value and try it again.\n" << endl;
-			cout << "...Press ENTER to quit..." << endl;
-			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			std::cout << "Failed to load certain values in the config.ini, be sure that EVERY option \nhas a valid value and try it again.\n" << std::endl;
+			std::cout << "...Press ENTER to quit..." << std::endl;
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 			return false;
 		}
 		else
@@ -28,8 +28,8 @@ bool Config::loadConfigFile()
 	}
 	else
 	{
-		cout << "Failed to load config.ini\n\n...Press ENTER to quit..." << endl;
-		cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+		std::cout << "Failed to load config.ini\n\n...Press ENTER to quit..." << std::endl;
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		return false;
 	}
 }
@@ -69,7 +69,7 @@ bool Config::getValuesFromSection(const char* section)
 		success += setValue(getValue("emulator_ip"), portsCfg.emulator_ip);
 		if(portsCfg.emulator_ip.compare("REPLACE_ME") == 0)
 		{
-			cout << "'emulator_ip' still has its default value, its required to replace \"REPLACE_ME\"\nwith the network IP of the PC where you want to host this emulator for incoming\nconnections to be able to connect properly!\n" << endl;
+			std::cout << "'emulator_ip' still has its default value, its required to replace \"REPLACE_ME\"\nwith the network IP of the PC where you want to host this emulator for incoming\nconnections to be able to connect properly!\n" << std::endl;
 			success++;
 		}
 
@@ -107,7 +107,7 @@ bool Config::getValuesFromSection(const char* section)
 		return false;
 }
 
-bool Config::setValue(string value, bool& storage)
+bool Config::setValue(std::string value, bool& storage)
 {
 	if(value.compare("false") == 0 || value.compare("0") == 0)
 		storage = false;
@@ -119,18 +119,18 @@ bool Config::setValue(string value, bool& storage)
 	return false;
 }
 
-bool Config::setValue(string value, int& storage)
+bool Config::setValue(std::string value, int& storage)
 {
 	if(value.empty())
 		return true;
 	else
 	{
-		storage = lexical_cast<int>(value);
+		storage = boost::lexical_cast<int>(value);
 		return false;
 	}
 }
 
-bool Config::setValue(string value, string& storage, bool allow_empty)
+bool Config::setValue(std::string value, std::string& storage, bool allow_empty)
 {
 	if(!value.empty() || allow_empty)
 	{
@@ -141,13 +141,13 @@ bool Config::setValue(string value, string& storage, bool allow_empty)
 		return true;
 }
 
-string Config::getValue(const char* key)
+std::string Config::getValue(const char* key)
 {
-	string searchString = key;
+	std::string searchString = key;
 	searchString.insert(searchString.begin(), '\n');
-	string value = "";
+	std::string value = "";
 	size_t position = data.find(searchString);
-	if(position != string::npos)
+	if(position != std::string::npos)
 	{
 		position += searchString.size();
 		while(data.at(position) == ' ' || data.at(position) == '=')

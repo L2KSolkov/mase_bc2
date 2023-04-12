@@ -21,7 +21,7 @@ struct mapping
 	{ 0, 0 } // Marks end of list.
 };
 
-string extension_to_type(const string& extension)
+std::string extension_to_type(const std::string& extension)
 {
 	for (mapping* m = mappings; m->extension; ++m)
 	{
@@ -31,14 +31,14 @@ string extension_to_type(const string& extension)
 	return "text/plain";
 }
 
-RequestHandler::RequestHandler(const string& doc_root) : doc_root_(doc_root)
+RequestHandler::RequestHandler(const std::string& doc_root) : doc_root_(doc_root)
 {
 }
 
 void RequestHandler::handle_request(const request& req, reply& rep, bool updater_respond)
 {
 	// Decode url to path.
-	string request_path;
+	std::string request_path;
 	if (!url_decode(req.uri, request_path))
 	{
 		rep = reply::stock_reply(reply::bad_request);
@@ -46,7 +46,7 @@ void RequestHandler::handle_request(const request& req, reply& rep, bool updater
 	}
 
 	// Request path must be absolute and not contain "..".
-	if (request_path.empty() || request_path[0] != '/' || request_path.find("..") != string::npos)
+	if (request_path.empty() || request_path[0] != '/' || request_path.find("..") != std::string::npos)
 	{
 		rep = reply::stock_reply(reply::bad_request);
 		return;
@@ -60,8 +60,8 @@ void RequestHandler::handle_request(const request& req, reply& rep, bool updater
 	std::size_t last_slash_pos = request_path.find_last_of("/");
 	std::size_t last_dot_pos = request_path.find_last_of(".");
 
-	string extension;
-	if (last_dot_pos != string::npos && last_dot_pos > last_slash_pos)
+	std::string extension;
+	if (last_dot_pos != std::string::npos && last_dot_pos > last_slash_pos)
 		extension = request_path.substr(last_dot_pos + 1);
 
 	// Open the file to send back.
@@ -71,36 +71,36 @@ void RequestHandler::handle_request(const request& req, reply& rep, bool updater
 		request_path = "version";
 	else if(request_path.compare("/easo/editorial/BF/2010/BFBC2/config/PC/game.xml") == 0)
 		request_path = "game";
-	else if(request_path.find("/fileupload/locker2.jsp?site=easo&cmd=dir&lkey=") != string::npos)
+	else if(request_path.find("/fileupload/locker2.jsp?site=easo&cmd=dir&lkey=") != std::string::npos)
 	{
 		size_t start = request_path.find("&pers="), end = request_path.find("&game=");
-		if(start != string::npos && end != string::npos && start+6 < end)
+		if(start != std::string::npos && end != std::string::npos && start+6 < end)
 		{
 			start += 6;
-			string name = request_path.substr(start, end-start);
+			std::string name = request_path.substr(start, end-start);
 			start = 0;
 			//fw->convertHtml(&name);
 
 			// these 2 chars are saved encoded in the database so we need to reverse these changes temporarily
 			start = 0;
-			string tempName = name;
-			while((start = tempName.find('%', start)) != string::npos)	// do this first because its part of the encoding
+			std::string tempName = name;
+			while((start = tempName.find('%', start)) != std::string::npos)	// do this first because its part of the encoding
 			{
 				tempName.replace(start, 1, "%25");
 				start++;
 			}
 			start = 0;
-			while((start = tempName.find('=', start)) != string::npos)
+			while((start = tempName.find('=', start)) != std::string::npos)
 				tempName.replace(start, 1, "%3d");
 			start = 0;
-			while((start = tempName.find('\"', start)) != string::npos)
+			while((start = tempName.find('\"', start)) != std::string::npos)
 				tempName.replace(start, 1, "%22");
 
 			list_entry persona;
 			if(db->getPersona(tempName, &persona))
 			{
-				string locker = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<LOCKER error=\"0\" game=\"/eagames/bfbc2\" maxBytes=\"2867200\" maxFiles=\"10\" numBytes=\"0\" numFiles=\"0\" ownr=\"";
-				locker.append(lexical_cast<string>(persona.id));
+				std::string locker = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<LOCKER error=\"0\" game=\"/eagames/bfbc2\" maxBytes=\"2867200\" maxFiles=\"10\" numBytes=\"0\" numFiles=\"0\" ownr=\"";
+				locker.append(boost::lexical_cast<std::string>(persona.id));
 				locker.append("\" pers=\"");
 				locker.append(name);
 				locker.append("\"/>");
@@ -111,7 +111,7 @@ void RequestHandler::handle_request(const request& req, reply& rep, bool updater
 
 				rep.headers.resize(2);
 				rep.headers[0].name = "Content-Length";
-				rep.headers[0].value = lexical_cast<string>(rep.content.size());
+				rep.headers[0].value = boost::lexical_cast<std::string>(rep.content.size());
 				rep.headers[1].name = "Content-Type";
 				rep.headers[1].value = "text/xml";
 				return;
@@ -121,8 +121,8 @@ void RequestHandler::handle_request(const request& req, reply& rep, bool updater
 	else
 		request_path = "";
 
-	string full_path = doc_root_ + request_path;
-	ifstream is(full_path.c_str(), ios::in | ios::binary);
+	std::string full_path = doc_root_ + request_path;
+	std::ifstream is(full_path.c_str(), std::ios::in | std::ios::binary);
 	if (!is)
 	{
 		rep = reply::stock_reply(reply::not_found);
@@ -137,12 +137,12 @@ void RequestHandler::handle_request(const request& req, reply& rep, bool updater
 
 	rep.headers.resize(2);
 	rep.headers[0].name = "Content-Length";
-	rep.headers[0].value = lexical_cast<string>(rep.content.size());
+	rep.headers[0].value = boost::lexical_cast<std::string>(rep.content.size());
 	rep.headers[1].name = "Content-Type";
 	rep.headers[1].value = extension_to_type(extension);
 }
 
-bool RequestHandler::url_decode(const string& in, string& out)
+bool RequestHandler::url_decode(const std::string& in, std::string& out)
 {
 	out.clear();
 	out.reserve(in.size());
@@ -153,7 +153,7 @@ bool RequestHandler::url_decode(const string& in, string& out)
 			if (i + 3 <= in.size())
 			{
 				int value = 0;
-				istringstream is(in.substr(i + 1, 2));
+				std::istringstream is(in.substr(i + 1, 2));
 				if (is >> std::hex >> value)
 				{
 					out += static_cast<char>(value);

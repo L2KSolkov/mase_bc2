@@ -10,7 +10,6 @@
 Logger*		debug = NULL;
 Framework*	fw = NULL;
 Database*	db = NULL;
-
 #ifndef WIN_MAIN
 int main(int argc, char* argv[])
 #else
@@ -33,14 +32,14 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		db = new Database(dbg.display_db_extended);
 		try
 		{
-			asio::io_service io_service;
+			boost::asio::io_service io_service;
 			fw->resolveEmuIp(&io_service);
 
 			HttpServer* ClientHTTP = NULL;
 			if(ports.use_http)
 				ClientHTTP = new HttpServer(io_service, ports.updater_respond);
 
-			int misc_port = lexical_cast<int>(ports.emulator_port);
+			int misc_port = boost::lexical_cast<int>(ports.emulator_port);
 			TcpServer* ClientMisc = NULL;
 			if(misc_port > 0)
 				ClientMisc = new TcpServer(io_service, MISC, misc_port, NULL);
@@ -66,8 +65,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		{
 			//std::cerr << e.what() << std::endl;
 			debug->error(DEBUG, "Error: %s", e.what());
-			cout << "\n\n...Press ENTER to quit..." << endl;
-			cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+			std::cout << "\n\n...Press ENTER to quit..." << std::endl;
+			std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		}
 		delete db;
 		delete debug;

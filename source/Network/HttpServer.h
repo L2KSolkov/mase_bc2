@@ -2,14 +2,14 @@
 #include "Http/HttpConnection.h"
 #include "Http/RequestHandler.h"
 
-class HttpServer : private noncopyable
+class HttpServer : private boost::noncopyable
 {
 	public:
-		HttpServer(asio::io_service& io_service, bool updater_respond);
+		HttpServer(boost::asio::io_service& io_service, bool updater_respond);
 		void handle_stop();
 
 	private:
-		tcp::acceptor acceptor_;
+		boost::asio::ip::tcp::acceptor acceptor_;
 		bool updater_respond;
 
 		/// The next connection to be accepted.
@@ -18,5 +18,5 @@ class HttpServer : private noncopyable
 		RequestHandler request_handler_;
 
 		void start_accept();
-		void handle_accept(const system::error_code& error);
+		void handle_accept(const boost::system::error_code& error);
 };

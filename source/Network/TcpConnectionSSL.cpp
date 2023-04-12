@@ -6,7 +6,7 @@
 extern Logger* debug;
 extern Framework* fw;
 
-TcpConnectionSSL::TcpConnectionSSL(asio::io_service& io_service, int type, asio::ssl::context& context, Database* db) : socket_(io_service, context)
+TcpConnectionSSL::TcpConnectionSSL(boost::asio::io_service& io_service, int type, boost::asio::ssl::context& context, Database* db) : socket_(io_service, context)
 {
 	this->type = type;
 	this->db = db;
@@ -35,8 +35,8 @@ socketSSL::lowest_layer_type& TcpConnectionSSL::socket()
 void TcpConnectionSSL::start()
 {
 	//before reading stuff we have to do a handshake
-	socket_.async_handshake(asio::ssl::stream_base::server,
-								boost::bind(&TcpConnectionSSL::handle_handshake, shared_from_this(), asio::placeholders::error));
+	socket_.async_handshake(boost::asio::ssl::stream_base::server,
+								boost::bind(&TcpConnectionSSL::handle_handshake, shared_from_this(), boost::asio::placeholders::error));
 }
 
 //////////////////
@@ -51,9 +51,9 @@ void TcpConnectionSSL::handle_handshake(const boost::system::error_code& error)
 
 		if(fw->addConnection(type))
 		{
-			socket_.async_read_some(asio::buffer(received_data, max_length),
+			socket_.async_read_some(boost::asio::buffer(received_data, max_length),
 								boost::bind(&TcpConnectionSSL::handle_read, shared_from_this(),
-									asio::placeholders::error, asio::placeholders::bytes_transferred));
+									boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 			debug->notification(1, type, "--[%s:%i] connected", remoteIp.c_str(), remotePort);
 
 			// check if incoming connection is local or public
@@ -72,7 +72,7 @@ void TcpConnectionSSL::handle_handshake(const boost::system::error_code& error)
 	}
 }
 
-void TcpConnectionSSL::handle_read(const system::error_code& error, size_t bytes_transferred)
+void TcpConnectionSSL::handle_read(const boost::system::error_code& error, size_t bytes_transferred)
 {
 	if (!error)
 	{
@@ -104,14 +104,14 @@ void TcpConnectionSSL::handle_read(const system::error_code& error, size_t bytes
 					if(send_data)
 						debug->warning(1, type, "We are overwriting some packet content here!!! -> %s", send_data);
 					send_data = PacketToData(outgoingQueue.front());
-					async_write(socket_, asio::buffer(send_data, send_length),
-								boost::bind(&TcpConnectionSSL::handle_write, shared_from_this(), asio::placeholders::error));
+					async_write(socket_, boost::asio::buffer(send_data, send_length),
+								boost::bind(&TcpConnectionSSL::handle_write, shared_from_this(), boost::asio::placeholders::error));
 					break;
 				}
 			case SKIP:
 				{
-					socket_.async_read_some(asio::buffer(received_data, max_length),
-								boost::bind(&TcpConnectionSSL::handle_read, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+					socket_.async_read_some(boost::asio::buffer(received_data, max_length),
+								boost::bind(&TcpConnectionSSL::handle_read, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 					break;
 				}
 			case DISCONNECT:
@@ -128,12 +128,12 @@ void TcpConnectionSSL::handle_read(const system::error_code& error, size_t bytes
 	}
 }
 
-void TcpConnectionSSL::handle_write(const system::error_code& error)
+void TcpConnectionSSL::handle_write(const boost::system::error_code& error)
 {
 	if (!error)
 	{
 		//packet was sent here
-		string packetData = outgoingQueue.front()->toString();
+		std::string packetData = outgoingQueue.front()->toString();
 		debug->notification(2, type, "->[%s:%i] %s 0x%08x {%s}", remoteIp.c_str(), remotePort, outgoingQueue.front()->GetType(), outgoingQueue.front()->GetType2(), packetData.c_str());
 		send_data = NULL;
 
@@ -149,8 +149,8 @@ void TcpConnectionSSL::handle_write(const system::error_code& error)
 		{
 			case NORMAL:
 				{
-					socket_.async_read_some(asio::buffer(received_data, max_length),
-								boost::bind(&TcpConnectionSSL::handle_read, shared_from_this(), asio::placeholders::error, asio::placeholders::bytes_transferred));
+					socket_.async_read_some(boost::asio::buffer(received_data, max_length),
+								boost::bind(&TcpConnectionSSL::handle_read, shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 					break;
 				}
 			case QUEUE:
@@ -158,8 +158,8 @@ void TcpConnectionSSL::handle_write(const system::error_code& error)
 					if(send_data)
 						debug->warning(1, type, "We are overwriting some packet content here!! -> %s", send_data);
 					send_data = PacketToData(outgoingQueue.front());
-					async_write(socket_, asio::buffer(send_data, send_length),
-								boost::bind(&TcpConnectionSSL::handle_write, shared_from_this(), asio::placeholders::error));
+					async_write(socket_, boost::asio::buffer(send_data, send_length),
+								boost::bind(&TcpConnectionSSL::handle_write, shared_from_this(), boost::asio::placeholders::error));
 					break;
 				}
 			default:
@@ -176,7 +176,7 @@ void TcpConnectionSSL::handle_write(const system::error_code& error)
 void TcpConnectionSSL::handle_stop()
 {
 	debug->notification(1, type, "--[%s:%i] disconnected", remoteIp.c_str(), remotePort);
-	system::error_code ec;
+	boost::system::error_code ec;
 	if(ping_timer)
 	{
 		ping_timer->cancel(ec);
@@ -195,11 +195,11 @@ void TcpConnectionSSL::handle_stop()
 		delete client;
 }
 
-void TcpConnectionSSL::handle_one_write(const system::error_code& error)
+void TcpConnectionSSL::handle_one_write(const boost::system::error_code& error)
 {
 	if(!error)
 	{
-		string packetData = specialQueue.front()->toString();
+		std::string packetData = specialQueue.front()->toString();
 		debug->notification(2, type, "->[%s:%i] %s 0x%08x {%s}", remoteIp.c_str(), remotePort, specialQueue.front()->GetType(), specialQueue.front()->GetType2(), packetData.c_str());
 		special_data = NULL;
 		delete specialQueue.front();
@@ -209,8 +209,8 @@ void TcpConnectionSSL::handle_one_write(const system::error_code& error)
 		{
 			debug->notification(4, type, "handle_one_write() - one-way packet sent, there are still packets in the special queue though, calling handle again...");
 			special_data = PacketToData(specialQueue.front(), true);
-			async_write(socket_, asio::buffer(special_data, special_data_length),
-						boost::bind(&TcpConnectionSSL::handle_one_write, shared_from_this(), asio::placeholders::error));
+			async_write(socket_, boost::asio::buffer(special_data, special_data_length),
+						boost::bind(&TcpConnectionSSL::handle_one_write, shared_from_this(), boost::asio::placeholders::error));
 		}
 		else
 			debug->notification(5, type, "handle_one_write() - one-way packet sent, getting out of scope...");
@@ -219,7 +219,7 @@ void TcpConnectionSSL::handle_one_write(const system::error_code& error)
 		debug->warning(1, type, "handle_one_write() - [%s:%i] - error message: %s - error code: %i", remoteIp.c_str(), remotePort, error.message().c_str(), error.value());
 }
 
-void TcpConnectionSSL::handle_ping(const system::error_code& error)
+void TcpConnectionSSL::handle_ping(const boost::system::error_code& error)
 {
 	if(!error)
 	{
@@ -237,8 +237,8 @@ void TcpConnectionSSL::handle_ping(const system::error_code& error)
 				if(special_data)
 					debug->warning(1, type, "We are overwriting some packet content here!!! -> %s", special_data);
 				special_data = PacketToData(specialQueue.front(), true);
-				async_write(socket_, asio::buffer(special_data, special_data_length),
-							boost::bind(&TcpConnectionSSL::handle_one_write, shared_from_this(), asio::placeholders::error));
+				async_write(socket_, boost::asio::buffer(special_data, special_data_length),
+							boost::bind(&TcpConnectionSSL::handle_one_write, shared_from_this(), boost::asio::placeholders::error));
 			}
 		}
 	}
@@ -250,14 +250,14 @@ void TcpConnectionSSL::handle_ping(const system::error_code& error)
 	}
 }
 
-void TcpConnectionSSL::handle_memcheck(const system::error_code& error)
+void TcpConnectionSSL::handle_memcheck(const boost::system::error_code& error)
 {
 	if(!error)
 	{
 		if(state != DISCONNECT)
 		{
 			// the memcheck packet doesn't actually do anything and was just implemented in an attempt to replicate the original traffic
-			string salt = fw->randomString(9, SEED_NUMBERS);
+			std::string salt = fw->randomString(9, SEED_NUMBERS);
 			Packet* sendPacket = new Packet("fsys", 0x80000000, false);
 			sendPacket->SetVar("TXN", "MemCheck");
 			sendPacket->SetVar("memcheck.[]", "0");
@@ -272,8 +272,8 @@ void TcpConnectionSSL::handle_memcheck(const system::error_code& error)
 				if(special_data)
 					debug->warning(1, type, "We are overwriting some packet content here!!! -> %s", special_data);
 				special_data = PacketToData(specialQueue.front(), true);
-				async_write(socket_, asio::buffer(special_data, special_data_length),
-							boost::bind(&TcpConnectionSSL::handle_one_write, shared_from_this(), asio::placeholders::error));
+				async_write(socket_, boost::asio::buffer(special_data, special_data_length),
+							boost::bind(&TcpConnectionSSL::handle_one_write, shared_from_this(), boost::asio::placeholders::error));
 			}
 		}
 	}
@@ -306,7 +306,7 @@ void TcpConnectionSSL::StoreIncomingData()
 
 			//Create the package and add it to the end of the queue
 			incomingQueue.push_back(new Packet(type, type2, length, (char*)data));
-			string packetData = incomingQueue.back()->toString();
+			std::string packetData = incomingQueue.back()->toString();
 			debug->notification(2, this->type, "<-[%s:%i] %s 0x%08x {%s}", remoteIp.c_str(), remotePort, incomingQueue.back()->GetType(), incomingQueue.back()->GetType2(), packetData.c_str());
 
 			current_length += length;
@@ -321,7 +321,7 @@ void TcpConnectionSSL::StoreIncomingData()
 
 char* TcpConnectionSSL::PacketToData(Packet* packet, bool is_special)
 {
-	string packetData = packet->GetData();
+	std::string packetData = packet->GetData();
 	if(packetData.size() > 8096 && !packet->isEncoded())	// packet exceeds max size, base64 encode it and send it in chunks (can only happen in ssl connection?)
 	{
 		Packet* sendPacket = NULL;
@@ -332,7 +332,7 @@ char* TcpConnectionSSL::PacketToData(Packet* packet, bool is_special)
 		packetData = base64_encode(reinterpret_cast<const unsigned char*>(packetData.c_str()), decoded_size);
 		int encoded_size = packetData.size();
 
-		while((pos = packetData.find('=', packetData.size()-9)) != string::npos)		// bring string into proper format again
+		while((pos = packetData.find('=', packetData.size()-9)) != std::string::npos)		// bring std::string into proper format again
 			packetData.replace(pos, 1, "%3d");
 
 		// split up the data in multiple packets
@@ -343,7 +343,7 @@ char* TcpConnectionSSL::PacketToData(Packet* packet, bool is_special)
 			sendPacket->SetVar("decodedSize", decoded_size);
 			sendPacket->SetVar("size", encoded_size);
 
-			string buffer;
+			std::string buffer;
 			if (new_size < 8096)
 				buffer = packetData.substr(i*8096, new_size);
 			else
@@ -436,7 +436,7 @@ unsigned int TcpConnectionSSL::encode(uint8_t *data, uint32_t num, int bytes)
 //////////////////
 // Socket stuff //
 //////////////////
-string TcpConnectionSSL::getLocalIp()
+std::string TcpConnectionSSL::getLocalIp()
 {
 	return socket().local_endpoint().address().to_string();
 }
@@ -445,7 +445,7 @@ int TcpConnectionSSL::getLocalPort()
 	return socket().local_endpoint().port();
 }
 
-string TcpConnectionSSL::getRemoteIp()
+std::string TcpConnectionSSL::getRemoteIp()
 {
 	return socket().remote_endpoint().address().to_string();
 }
@@ -460,7 +460,7 @@ int TcpConnectionSSL::getRemotePort()
 /////////////////////////////
 void TcpConnectionSSL::ProcessPacket(Packet* receivedPacket)
 {
-	string txn = receivedPacket->GetVar("TXN");
+	std::string txn = receivedPacket->GetVar("TXN");
 	if(!txn.empty())
 	{
 		bool unknown = false;
@@ -500,7 +500,7 @@ void TcpConnectionSSL::ProcessPacket(Packet* receivedPacket)
 					}
 					outgoingQueue.push_back(sendPacket);
 
-					string salt = fw->randomString(9, SEED_NUMBERS);
+					std::string salt = fw->randomString(9, SEED_NUMBERS);
 					sendPacket = new Packet("fsys", 0x80000000, false);
 					sendPacket->SetVar("TXN", "MemCheck");
 					sendPacket->SetVar("memcheck.[]", "0");
@@ -512,14 +512,14 @@ void TcpConnectionSSL::ProcessPacket(Packet* receivedPacket)
 				{
 					if(!ping_timer && !memcheck_timer)	// activate both ping and memcheck timers when we receive this
 					{
-						ping_timer = new asio::deadline_timer((boost::asio::io_context&)(socket_).get_executor().context());//, posix_time::seconds(150)); // only create the object here, it'll be updated below anyway
-						memcheck_timer = new asio::deadline_timer((boost::asio::io_context&)(socket_).get_executor().context(), posix_time::seconds(500));
-						memcheck_timer->async_wait(boost::bind(&TcpConnectionSSL::handle_memcheck, shared_from_this(), asio::placeholders::error));
+						ping_timer = new boost::asio::deadline_timer((boost::asio::io_context&)(socket_).get_executor().context());//, posix_time::seconds(150)); // only create the object here, it'll be updated below anyway
+						memcheck_timer = new boost::asio::deadline_timer((boost::asio::io_context&)(socket_).get_executor().context(), boost::posix_time::seconds(500));
+						memcheck_timer->async_wait(boost::bind(&TcpConnectionSSL::handle_memcheck, shared_from_this(), boost::asio::placeholders::error));
 					}
 					else	// update memcheck timer (was approximately 300 seconds in captured traffics)
 					{
-						memcheck_timer->expires_from_now(posix_time::seconds(300));
-						memcheck_timer->async_wait(boost::bind(&TcpConnectionSSL::handle_memcheck, shared_from_this(), asio::placeholders::error));
+						memcheck_timer->expires_from_now(boost::posix_time::seconds(300));
+						memcheck_timer->async_wait(boost::bind(&TcpConnectionSSL::handle_memcheck, shared_from_this(), boost::asio::placeholders::error));
 					}
 					state = SKIP;
 				}
@@ -527,7 +527,7 @@ void TcpConnectionSSL::ProcessPacket(Packet* receivedPacket)
 				{
 					// should we do this when its done below for practically every packet we receive anyway?
 					//ping_timer->expires_from_now(posix_time::seconds(150));
-					//ping->async_wait(boost::bind(&TcpConnectionSSL::handle_ping, this, asio::placeholders::error));
+					//ping->async_wait(boost::bind(&TcpConnectionSSL::handle_ping, this, boost::asio::placeholders::error));
 					state = SKIP;
 				}
 				else if(txn.compare("GetPingSites") == 0)
@@ -635,8 +635,8 @@ void TcpConnectionSSL::ProcessPacket(Packet* receivedPacket)
 			else if(duration >= 0 && duration+10 < 150)		// reset the timer
 				duration = 150 + (duration % 10);	// ping intervals seem to be approximately 150 seconds (why did I think it was a good idea to do it like this?)
 
-			ping_timer->expires_from_now(posix_time::seconds(duration));
-			ping_timer->async_wait(boost::bind(&TcpConnectionSSL::handle_ping, shared_from_this(), asio::placeholders::error));
+			ping_timer->expires_from_now(boost::posix_time::seconds(duration));
+			ping_timer->async_wait(boost::bind(&TcpConnectionSSL::handle_ping, shared_from_this(), boost::asio::placeholders::error));
 		}
 
 		if(unknown)
@@ -647,12 +647,12 @@ void TcpConnectionSSL::ProcessPacket(Packet* receivedPacket)
 	}
 	else	// no TXN was included in this packet so this one has to be part of a large base64 encoded packet?
 	{
-		string buffer = receivedPacket->GetVar("size");
-		string data = receivedPacket->GetVar("data");
+		std::string buffer = receivedPacket->GetVar("size");
+		std::string data = receivedPacket->GetVar("data");
 		if(!buffer.empty() && !data.empty())
 		{
 			// is it safe to assume that the encoded packets are ordered and that there won't be different encoded packets exchanged at the same time?
-			size_t size = lexical_cast<int>(buffer);
+			size_t size = boost::lexical_cast<int>(buffer);
 			encoded_data.append(receivedPacket->GetVar("data"));
 
 			if(encoded_data.size() >= size)		// all data should be received, decode it
@@ -661,13 +661,13 @@ void TcpConnectionSSL::ProcessPacket(Packet* receivedPacket)
 					self_created_packet = true;
 
 				size_t pos = encoded_data.size()-9;
-				while((pos = encoded_data.find("%3d", pos)) != string::npos)	// see if there are any '=' in string and convert it back
+				while((pos = encoded_data.find("%3d", pos)) != std::string::npos)	// see if there are any '=' in std::string and convert it back
 				{
 					encoded_data.replace(pos, 3, 1, '=');
 					pos = encoded_data.size()-6;
 				}
 
-				string decoded_data = base64_decode(encoded_data);
+				std::string decoded_data = base64_decode(encoded_data);
 				Packet* packet = new Packet(receivedPacket->GetType(), receivedPacket->GetType2(), decoded_data.size(), decoded_data.c_str());
 
 				delete receivedPacket;		// first we have to pop the last packet we got (which is the last of the series of encoded packets)

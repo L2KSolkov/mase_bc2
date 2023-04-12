@@ -66,13 +66,8 @@ Framework::Framework(emulatorSettings emuSettings, connectionSettings ports, boo
 	plasmaServers = 0;
 	theaterClients = 0;
 	theaterServers = 0;
-#ifdef _DEMO_RELEASE
-	maxAllowedServers = 4;
-	maxAllowedClients = 64;
-#else
 	maxAllowedServers = 1024;
 	maxAllowedClients = 8192;
-#endif
 	updateConnections();
 	this->emuSettings = emuSettings;
 	this->ports = ports;
@@ -81,7 +76,7 @@ Framework::Framework(emulatorSettings emuSettings, connectionSettings ports, boo
 	this->emuLocal = false;
 }
 
-string Framework::getTime()
+std::string Framework::getTime()
 {
 	//format: "Jan-00-0000 00%3a00%3a00 UTC"
 	char str[32];
@@ -94,16 +89,16 @@ string Framework::getTime()
 	struct tm st = *localtime(&now);
 	sprintf(str, "\"%s-%02d-%04d %02d%%3a%02d%%3a%02d UTC\"", months[st.tm_mon], st.tm_mday, 1900+st.tm_year, st.tm_hour, st.tm_min, st.tm_sec);
 #endif
-	string time = str;
+	std::string time = str;
 	return time;
 }
 /*
-void Framework::convertHtml(string* data)
+void Framework::convertHtml(std::string* data)
 {
 	int pos = 0;
-	while((pos = data->find('%', pos)) != string::npos)
+	while((pos = data->find('%', pos)) != std::string::npos)
 	{
-		string enc_char = data->substr(pos, pos+3);
+		std::string enc_char = data->substr(pos, pos+3);
 		for(int i = 0; i < 38; i++)
 		{
 			if(enc_char.compare(encoded_chars[i].encoded_up) == 0)
@@ -124,20 +119,20 @@ bool Framework::DatabaseLogging()
 
 void Framework::checkFiles()
 {
-	if(!filesystem::exists("./database"))
+	if(!boost::filesystem::exists("./database"))
 	{
 		debug->warning(1, DEBUG, "The subdirectory 'database' was not found, creating a default one");
-		filesystem::path dir("./database");
-		if(!filesystem::create_directory(dir))
+		boost::filesystem::path dir("./database");
+		if(!boost::filesystem::create_directory(dir))
 			debug->warning(1, DEBUG, "Unable to create subdirectory 'database', check your permissions");
 
-		ofstream users("./database/users.lst", ios::out | ios::app);
+		std::ofstream users("./database/users.lst", std::ios::out | std::ios::app);
 		if(users.is_open() && users.good())
 			users.close();
 		else
 			debug->warning(1, DEBUG, "Failed to create users.lst");
 
-		ofstream personas("./database/personas.lst", ios::out | ios::app);
+		std::ofstream personas("./database/personas.lst", std::ios::out | std::ios::app);
 		if(personas.is_open() && personas.good())
 			personas.close();
 		else
@@ -145,20 +140,20 @@ void Framework::checkFiles()
 	}
 	else
 	{
-		if(!filesystem::exists("./database/users.lst"))
+		if(!boost::filesystem::exists("./database/users.lst"))
 		{
 			debug->warning(1, DEBUG, "The file 'users.lst' was not found in the subfolder 'database', creating an empty one (which means no users were loaded)");
-			ofstream users("./database/users.lst", ios::out | ios::app);
+			std::ofstream users("./database/users.lst", std::ios::out | std::ios::app);
 			if(users.is_open() && users.good())
 				users.close();
 			else
 				debug->warning(1, DEBUG, "Failed to create users.lst");
 		}
 
-		if(!filesystem::exists("./database/personas.lst"))
+		if(!boost::filesystem::exists("./database/personas.lst"))
 		{
 			debug->warning(1, DEBUG, "The file 'personas.lst' was not found in the subfolder 'database', creating an empty one (which means no personas were loaded)");
-			ofstream personas("./database/personas.lst", ios::out | ios::app);
+			std::ofstream personas("./database/personas.lst", std::ios::out | std::ios::app);
 			if(personas.is_open() && personas.good())
 				personas.close();
 			else
@@ -166,20 +161,20 @@ void Framework::checkFiles()
 		}
 	}
 
-	if(!filesystem::exists("./templates"))
+	if(!boost::filesystem::exists("./templates"))
 	{
 		debug->warning(1, DEBUG, "The subdirectory 'templates' was not found, the emulator will not be able to create any personas without it (and might even crash) so make sure you have the original folder with all required files and restart the process!");
-		filesystem::path dir("./templates");
+		boost::filesystem::path dir("./templates");
 		if(!boost::filesystem::create_directory(dir))
 			debug->warning(1, DEBUG, "Unable to create subdirectory 'templates', check your permissions");
 	}
 }
 
-//generates random string (e.g. for lkey)
-string Framework::randomString(int len, int seed_type)
+//generates random std::string (e.g. for lkey)
+std::string Framework::randomString(int len, int seed_type)
 {
-	string buffer, chars;
-	random::random_device rng;
+	std::string buffer, chars;
+	boost::random::random_device rng;
 	switch(seed_type)
 	{
 		case SEED_BRAC:
@@ -194,7 +189,7 @@ string Framework::randomString(int len, int seed_type)
 					 "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 					 "1234567890-_");
 	}
-	random::uniform_int_distribution<> index_dist(0, chars.size()-1);
+	boost::random::uniform_int_distribution<> index_dist(0, chars.size()-1);
 	for(int i = 0; i < len; i++)
 		buffer.push_back(chars[index_dist(rng)]);
 	return buffer;
@@ -207,7 +202,7 @@ void Framework::addJoinableServer(serverConnectionInfo server)
 
 TcpConnection* Framework::getServerSocket(int id)
 {
-	for(list<serverConnectionInfo>::iterator it = serverJoinableList.begin(); it != serverJoinableList.end(); it++)
+	for(std::list<serverConnectionInfo>::iterator it = serverJoinableList.begin(); it != serverJoinableList.end(); it++)
 	{
 		if(it->id == id)
 			return it->socket.get();
@@ -217,7 +212,7 @@ TcpConnection* Framework::getServerSocket(int id)
 
 bool Framework::removeJoinableServer(int id)
 {
-	for(list<serverConnectionInfo>::iterator it = serverJoinableList.begin(); it != serverJoinableList.end(); it++)
+	for(std::list<serverConnectionInfo>::iterator it = serverJoinableList.begin(); it != serverJoinableList.end(); it++)
 	{
 		if(it->id == id)
 		{
@@ -318,28 +313,28 @@ void Framework::updateConnections()
 #endif
 }
 
-void Framework::resolveEmuIp(asio::io_service* io_service)
+void Framework::resolveEmuIp(boost::asio::io_service* io_service)
 {
-	std::vector<string> ip_list;
-	asio::ip::tcp::resolver resolver(*io_service);
-	asio::ip::tcp::resolver::query query(ports.emulator_ip, "");
-	for(asio::ip::tcp::resolver::iterator it = resolver.resolve(query); it != asio::ip::tcp::resolver::iterator(); ++it)
+	std::vector<std::string> ip_list;
+	boost::asio::ip::tcp::resolver resolver(*io_service);
+	boost::asio::ip::tcp::resolver::query query(ports.emulator_ip, "");
+	for(boost::asio::ip::tcp::resolver::iterator it = resolver.resolve(query); it != boost::asio::ip::tcp::resolver::iterator(); ++it)
 	{
-		asio::ip::tcp::endpoint end = *it;
-		if(end.protocol() == asio::ip::tcp::v4())	// only want ip's in v4 format
+		boost::asio::ip::tcp::endpoint end = *it;
+		if(end.protocol() == boost::asio::ip::tcp::v4())	// only want ip's in v4 format
 			ip_list.push_back(end.address().to_string());
 	}
 
 	// if the hostname gives multiple IP's should we even check if all of them are (not) local?
 	// and what if one is local and the others aren't? in that case just set it to local setting (to be safe)
-	for(std::vector<string>::iterator h = ip_list.begin(); h != ip_list.end(); h++)
+	for(std::vector<std::string>::iterator h = ip_list.begin(); h != ip_list.end(); h++)
 	{
 		ports.emulator_ip = *h; // in case of a given hostname we don't want to re-resolve the domain again so we just store the last checked ip from the resolved list instead
 		emuLocal = isIpLocal(ports.emulator_ip);
 	}
 }
 
-bool Framework::isIpLocal(string ip)
+bool Framework::isIpLocal(std::string ip)
 {
 	bool isLocal = false;
 	int count = sizeof(filteredIPRanges)/sizeof(*filteredIPRanges);
@@ -352,9 +347,9 @@ bool Framework::isIpLocal(string ip)
 		{
 			pos = end+1;
 			end = ip.find_first_of('.', pos);
-			if(end == (int)string::npos)
+			if(end == (int)std::string::npos)
 				end = ip.size();
-			range = lexical_cast<int>(ip.substr(pos, end-pos));
+			range = boost::lexical_cast<int>(ip.substr(pos, end-pos));
 
 			if(range < filteredIPRanges[i][0][j] || range > filteredIPRanges[i][1][j])
 				rangeFits = false;

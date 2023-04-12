@@ -12,12 +12,12 @@ Stats::Stats()
 {
 }
 
-Stats::Stats(string email, string persona, bool createNew, bool initOnly)
+Stats::Stats(std::string email, std::string persona, bool createNew, bool initOnly)
 {
 	this->email = email;
 	this->persona = persona;
 
-	string statsName = "./templates/stats";
+	std::string statsName = "./templates/stats";
 	if(fw->emuCfg().all_stats_unlocked)
 		statsName.append("_unlocked");
 
@@ -29,12 +29,12 @@ Stats::Stats(string email, string persona, bool createNew, bool initOnly)
 	path.append(".cfg");
 	dogtagPath.append(".dog");
 
-	ifstream statsFile(path, ifstream::in);
+	std::ifstream statsFile(path, std::ifstream::in);
 	if(statsFile.is_open() && statsFile.good())
 	{
 		if(!initOnly)
 		{
-			stringstream buffer;
+			std::stringstream buffer;
 			buffer << statsFile.rdbuf();
 			data = buffer.str();
 			statsFile.close();
@@ -42,7 +42,7 @@ Stats::Stats(string email, string persona, bool createNew, bool initOnly)
 			{
 				debug->warning(2, DEBUG, "Persona Stats file \"%s\" data corrupted, loading default stats from template...", path.c_str());
 				buffer.clear();
-				ifstream defaultFile(statsName, ifstream::in);
+				std::ifstream defaultFile(statsName, std::ifstream::in);
 				if(defaultFile.is_open() && defaultFile.good())
 				{
 					buffer << defaultFile.rdbuf();
@@ -61,22 +61,22 @@ Stats::Stats(string email, string persona, bool createNew, bool initOnly)
 		if(!createNew)
 		{
 			debug->warning(1, DEBUG, "Could not find persona file '%s', creating new one...", path.c_str());
-			filesystem::path source_path(statsName), dest_path(path);
-			if(!filesystem::exists(source_path))//copyFile("./templates/stats", path.c_str()))
+			boost::filesystem::path source_path(statsName), dest_path(path);
+			if(!boost::filesystem::exists(source_path))//copyFile("./templates/stats", path.c_str()))
 				debug->warning(1, DEBUG, "Could not get default stats, logout asap with the client and check all the files locations!");
 			else
-				filesystem::copy_file(source_path, dest_path);
+				boost::filesystem::copy_file(source_path, dest_path);
 
-			if(!filesystem::exists(dest_path))
+			if(!boost::filesystem::exists(dest_path))
 				debug->warning(1, DEBUG, "Failed to copy the default stats to %s, check you access permissions!", path.c_str());
 			else
 			{
-				ifstream statsFile(path, ifstream::in);
+				std::ifstream statsFile(path, std::ifstream::in);
 				if(statsFile.is_open() && statsFile.good())
 				{
 					if(!initOnly)
 					{
-						stringstream buffer;
+						std::stringstream buffer;
 						buffer << statsFile.rdbuf();
 						data = buffer.str();
 						statsFile.close();
@@ -92,20 +92,20 @@ Stats::Stats(string email, string persona, bool createNew, bool initOnly)
 		{
 			bool error = false;
 			//if we create a new file then we don't want to load stats
-			filesystem::path source_path(statsName), dest_path(path);
-			if(!filesystem::exists(source_path))
+			boost::filesystem::path source_path(statsName), dest_path(path);
+			if(!boost::filesystem::exists(source_path))
 				debug->warning(1, DEBUG, "Could not get default stats, logout asap with the client and check all the files locations!");
 			else
-				filesystem::copy_file(source_path, dest_path);
+				boost::filesystem::copy_file(source_path, dest_path);
 
-			if(!filesystem::exists(dest_path))
+			if(!boost::filesystem::exists(dest_path))
 				debug->warning(1, DEBUG, "Failed to copy the default stats to %s, check you access permissions!", path.c_str());
 			else
 			{
 				if(!error)
 					debug->notification(2, DEBUG, "Created new persona file '%s'", path.c_str());
 
-				ofstream dogFile(dogtagPath, ios::out | ios::trunc);
+				std::ofstream dogFile(dogtagPath, std::ios::out | std::ios::trunc);
 				if(!dogFile.is_open())
 				{
 					debug->warning(2, DEBUG, "Couldn't create dogtag file for '%s'", persona.c_str());
@@ -123,15 +123,15 @@ Stats::Stats(string email, string persona, bool createNew, bool initOnly)
 
 void Stats::saveStats()
 {
-	string tempFile = path;
+	std::string tempFile = path;
 	tempFile.append(".bak");
-	filesystem::path source_path(path), dest_path(tempFile);
-	filesystem::copy_file(source_path, dest_path);
-	if(!filesystem::exists(dest_path))
+	boost::filesystem::path source_path(path), dest_path(tempFile);
+	boost::filesystem::copy_file(source_path, dest_path);
+	if(!boost::filesystem::exists(dest_path))
 		return;
 
 	bool done = false;
-	ofstream statsFile(path, ofstream::out | ofstream::trunc);	//we delete all content, is it safe to do this?
+	std::ofstream statsFile(path, std::ofstream::out | std::ofstream::trunc);	//we delete all content, is it safe to do this?
 	if(statsFile.is_open() && statsFile.good())
 	{
 		statsFile.write(data.c_str(), data.size());
@@ -140,16 +140,16 @@ void Stats::saveStats()
 		statsFile.close();
 	}
 	if(!done)
-		filesystem::copy_file(dest_path, source_path, filesystem::copy_options::overwrite_existing);
-	filesystem::remove(dest_path);
+		boost::filesystem::copy_file(dest_path, source_path, boost::filesystem::copy_options::overwrite_existing);
+	boost::filesystem::remove(dest_path);
 }
 
-string Stats::getKey(string key)
+std::string Stats::getKey(std::string key)
 {
 	size_t start = 0, end = 0;
-	string result = "";
+	std::string result = "";
 
-	while((start = data.find(key, start)) != string::npos)	// only check for newline at start if we have a pos > 1
+	while((start = data.find(key, start)) != std::string::npos)	// only check for newline at start if we have a pos > 1
 	{
 		if((start == 0 || data[start-1] == '\n') && (start+key.size() < data.size() && data[start+key.size()] == '='))
 			break;
@@ -158,7 +158,7 @@ string Stats::getKey(string key)
 	}
 
 	size_t actualStart = start+key.size()+1;
-	if(start != string::npos && (end = data.find_first_of('\n', actualStart)) != string::npos)
+	if(start != std::string::npos && (end = data.find_first_of('\n', actualStart)) != std::string::npos)
 	{
 		if(end != actualStart)		//the found key is empty
 			result = data.substr(actualStart, (end-actualStart));
@@ -166,12 +166,12 @@ string Stats::getKey(string key)
 	return result;
 }
 
-bool Stats::setKey(string key, string value, bool ignore_warning)
+bool Stats::setKey(std::string key, std::string value, bool ignore_warning)
 {
 	size_t start = 0, end = 0;
-	string result = "";
+	std::string result = "";
 
-	while((start = data.find(key, start)) != string::npos)	// only check for newline at start if we have a pos > 1
+	while((start = data.find(key, start)) != std::string::npos)	// only check for newline at start if we have a pos > 1
 	{
 		if((start == 0 || data[start-1] == '\n') && (start+key.size() < data.size() && data[start+key.size()] == '='))
 			break;
@@ -180,7 +180,7 @@ bool Stats::setKey(string key, string value, bool ignore_warning)
 	}
 
 	size_t actualStart = start+key.size()+1;	// +1 for '='
-	if(start != string::npos && (end = data.find_first_of('\n', actualStart)) != string::npos)
+	if(start != std::string::npos && (end = data.find_first_of('\n', actualStart)) != std::string::npos)
 	{
 		//we found the key so we modify it
 		data.replace(actualStart, (end-actualStart), value);
@@ -202,10 +202,10 @@ bool Stats::isEmpty()
 
 int Stats::loadDogtags()
 {
-	ifstream file(dogtagPath, ifstream::in);
+	std::ifstream file(dogtagPath, std::ifstream::in);
 	if(file.is_open() && file.good())
 	{
-		stringstream buffer;
+		std::stringstream buffer;
 		buffer << file.rdbuf();
 		dogtags = buffer.str();
 		file.close();
@@ -214,7 +214,7 @@ int Stats::loadDogtags()
 	{
 		dogtags = "";
 		debug->warning(3, DEBUG, "The dogtag file \"%s\" was not found or could not be opened, creating a new one...", dogtagPath.c_str());
-		ofstream dogFile(dogtagPath, ios::out | ios::trunc);
+		std::ofstream dogFile(dogtagPath, std::ios::out | std::ios::trunc);
 		if(!dogFile.is_open())
 			debug->warning(2, DEBUG, "Couldn't create dogtag file for '%s'", persona.c_str());
 		else
@@ -226,10 +226,10 @@ int Stats::loadDogtags()
 	else
 	{
 		size_t count = 0, i = 0;
-		while(i != string::npos)
+		while(i != std::string::npos)
 		{
 			i = dogtags.find("\n", i);
-			if(i != string::npos)
+			if(i != std::string::npos)
 			{
 				count++;
 				i++;
@@ -248,7 +248,7 @@ Stats::dogtag Stats::getDogtag(int lineNumber)
 	entry.data = "";
 	entry.id = -1;
 
-	while(count != lineNumber && start != string::npos && start < dogtags.size())
+	while(count != lineNumber && start != std::string::npos && start < dogtags.size())
 	{
 		if(start < 0)
 		{
@@ -256,7 +256,7 @@ Stats::dogtag Stats::getDogtag(int lineNumber)
 			break;
 		}
 
-		if((start = dogtags.find("\n", start)) != string::npos)
+		if((start = dogtags.find("\n", start)) != std::string::npos)
 		{
 			end = start;
 			count++;
@@ -267,7 +267,7 @@ Stats::dogtag Stats::getDogtag(int lineNumber)
 	if(end > 0)
 	{
 		start = dogtags.rfind("=", end)+1;
-		//if(start == string::npos)
+		//if(start == std::string::npos)
 			//start = 0;		//some problem with the data here, just put all data in it
 		entry.data = dogtags.substr(start, end-start);
 
@@ -277,7 +277,7 @@ Stats::dogtag Stats::getDogtag(int lineNumber)
 		else
 			end = 0;
 
-		if((start = dogtags.rfind("\n", end)) == string::npos)
+		if((start = dogtags.rfind("\n", end)) == std::string::npos)
 			start = 0;		//we are at the first line here (probably)
 		else
 			start++;		//we want to have the start index after \n
@@ -293,12 +293,12 @@ Stats::dogtag Stats::getDogtag(int lineNumber)
 
 void Stats::addDogtag(dogtag newDogtag)
 {
-	string buffer = "\n";
+	std::string buffer = "\n";
 	buffer.append(newDogtag.id);
 	buffer.append("=");
 
 	size_t start = 0;
-	if((start = dogtags.find(buffer, 0)) == string::npos)
+	if((start = dogtags.find(buffer, 0)) == std::string::npos)
 	{
 		buffer.erase(buffer.begin());
 		start = dogtags.find(buffer, 0);
@@ -307,11 +307,11 @@ void Stats::addDogtag(dogtag newDogtag)
 		buffer.erase(buffer.begin());	// if we remove the \n again we don't have to change the position right?
 
 	buffer.append(newDogtag.data);
-	if(start != string::npos)			// if we already have that id in the dogtags we only want to update it
+	if(start != std::string::npos)			// if we already have that id in the dogtags we only want to update it
 	{
 		//if we update a dogtag we only replace the line, newline at the end is not included
 		size_t end = dogtags.find("\n", start+1);
-		if(end == string::npos)
+		if(end == std::string::npos)
 		{
 			debug->warning(3, DEBUG, "dogtags data in \"%s\", seems to be corrupted, check the file, start=%i, length=%i", dogtagPath.c_str(), start, end-start);
 			end = start;
@@ -329,16 +329,16 @@ void Stats::addDogtag(dogtag newDogtag)
 
 void Stats::saveDogtags()
 {
-	string tempFile = dogtagPath;
+	std::string tempFile = dogtagPath;
 	tempFile.append(".dbk");
 
-	filesystem::path source_path(dogtagPath), dest_path(tempFile);
-	filesystem::copy_file(source_path, dest_path);
-	if(!filesystem::exists(dest_path))
+	boost::filesystem::path source_path(dogtagPath), dest_path(tempFile);
+	boost::filesystem::copy_file(source_path, dest_path);
+	if(!boost::filesystem::exists(dest_path))
 		return;
 
 	bool done = false;
-	ofstream file(dogtagPath, ofstream::out | ofstream::trunc);	//we delete all content, is it safe to do this?
+	std::ofstream file(dogtagPath, std::ofstream::out | std::ofstream::trunc);	//we delete all content, is it safe to do this?
 	if(file.is_open() && file.good())
 	{
 		file.write(dogtags.c_str(), dogtags.size());
@@ -350,17 +350,17 @@ void Stats::saveDogtags()
 	else
 		debug->warning(3, DEBUG, "The dogtag file \"%s\" was not found or could not be opened for saving", dogtagPath.c_str());
 	if(!done)
-		filesystem::copy_file(dest_path, source_path, filesystem::copy_options::overwrite_existing);
+		boost::filesystem::copy_file(dest_path, source_path, boost::filesystem::copy_options::overwrite_existing);
 
-	filesystem::remove(dest_path);
+	boost::filesystem::remove(dest_path);
 }
 
 void Stats::deleteStats()
 {
-	filesystem::path stats_path(path), dog_path(dogtagPath);
-	if(filesystem::remove(stats_path))
+	boost::filesystem::path stats_path(path), dog_path(dogtagPath);
+	if(boost::filesystem::remove(stats_path))
 		debug->notification(3, DEBUG, "Deleted file '%s'", path.c_str());
 
-	if(filesystem::remove(dog_path))
+	if(boost::filesystem::remove(dog_path))
 		debug->notification(3, DEBUG, "Deleted file '%s'", dogtagPath.c_str());
 }

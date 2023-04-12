@@ -2,15 +2,15 @@
 #include "TcpConnectionSSL.h"
 #include "../SSL_cert.h"
 
-class TcpServer : private noncopyable
+class TcpServer : private boost::noncopyable
 {
 	public:
-		TcpServer(asio::io_service& io_service, int type, int port, Database* db);
+		TcpServer(boost::asio::io_service& io_service, int type, int port, Database* db);
 		void handle_stop();
 
 	private:
-		tcp::acceptor acceptor_;
-		asio::ssl::context context_;
+		boost::asio::ip::tcp::acceptor acceptor_;
+		boost::asio::ssl::context context_;
 		TcpConnectionSSL::pointer new_ssl_connection;
 		TcpConnection::pointer new_connection;
 
@@ -19,6 +19,6 @@ class TcpServer : private noncopyable
 		Database* db;
 
 		void start_accept();
-		void handle_accept(const system::error_code& error);
-		void handle_acceptSSL(const system::error_code& error);
+		void handle_accept(const boost::system::error_code& error);
+		void handle_acceptSSL(const boost::system::error_code& error);
 };

@@ -3,16 +3,16 @@
 class Config
 {
 	private:
-		string data;
+		std::string data;
 		debugSettings debugCfg;
 		connectionSettings portsCfg;
 		emulatorSettings emuCfg;
 		consoleSettings conCfg;
 
-		string getValue(const char* key);
-		bool setValue(string value, int& storage);
-		bool setValue(string value, bool& storage);
-		bool setValue(string value, string& storage, bool allow_empty = false);
+		std::string getValue(const char* key);
+		bool setValue(std::string value, int& storage);
+		bool setValue(std::string value, bool& storage);
+		bool setValue(std::string value, std::string& storage, bool allow_empty = false);
 
 		bool getValuesFromSection(const char* section);
 		bool createDefaultConfig();

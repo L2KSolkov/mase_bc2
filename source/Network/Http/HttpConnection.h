@@ -3,17 +3,16 @@
 #include "Reply.h"
 #include "RequestHandler.h"
 #include "RequestParser.h"
-using asio::ip::tcp;
 
 /// Represents a single connection from a client.
 class HttpConnection : public boost::enable_shared_from_this<HttpConnection>, private boost::noncopyable
 {
 	public:
 		/// Construct a connection with the given io_service.
-		explicit HttpConnection(asio::io_service& io_service, RequestHandler& handler, bool updater_respond);
+		explicit HttpConnection(boost::asio::io_service& io_service, RequestHandler& handler, bool updater_respond);
 
 		/// Get the socket associated with the connection.
-		tcp::socket& socket();
+		boost::asio::ip::tcp::socket& socket();
 
 		/// Start the first asynchronous operation for the connection.
 		void start();
@@ -27,10 +26,10 @@ class HttpConnection : public boost::enable_shared_from_this<HttpConnection>, pr
 		void handle_write(const boost::system::error_code& e);
 
 		/// Strand to ensure the connection's handlers are not called concurrently.
-		asio::io_service::strand strand_;
+		boost::asio::io_service::strand strand_;
 
 		/// Socket for the connection.
-		asio::ip::tcp::socket socket_;
+		boost::asio::ip::tcp::socket socket_;
 
 		/// The handler used to process the incoming request.
 		RequestHandler& request_handler_;
@@ -48,9 +47,9 @@ class HttpConnection : public boost::enable_shared_from_this<HttpConnection>, pr
 		reply reply_;
 
 		bool updater_respond;
-		string getLocalIp();
+		std::string getLocalIp();
 		int getLocalPort();
-		string getRemoteIp();
+		std::string getRemoteIp();
 		int getRemotePort();
 };
 

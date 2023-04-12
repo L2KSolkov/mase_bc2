@@ -6,7 +6,7 @@ class Logger
 {
 	private:
 		bool logfile;
-		ofstream fp;
+		std::ofstream fp;
 
 		//console stuff
 #if defined (_WIN32)
@@ -20,9 +20,9 @@ class Logger
 		unsigned short buildColor(int from, bool notification);
 		void updateConsole(unsigned short color, const char* msg, int msgLength);
 #else
-		string lastColor;
-		string buildColor(int from, bool notification);
-		void updateConsole(string color, const char* msg, int msgLength);
+		std::string lastColor;
+		std::string buildColor(int from, bool notification);
+		void updateConsole(std::string color, const char* msg, int msgLength);
 #endif
 		bool	useColor;
 		int		fileNotificationLevel, fileWarningLevel;

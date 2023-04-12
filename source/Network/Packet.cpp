@@ -64,21 +64,21 @@ Packet::~Packet( )
 }
 
 // old method (slower or just more code?)
-/*string Packet::GetVar(string varname)
+/*std::string Packet::GetVar(std::string varname)
 {
 	//old version where I actually searched twice every time
 
 	int start, end;
-	string result = "";
-	string searchString = varname;// + '=';
+	std::string result = "";
+	std::string searchString = varname;// + '=';
 	searchString.append("=");
 
 	start = var_buffer.find(searchString);
 	//if the name we search for begins at 0 then we know for sure that there cannot be a second one we are searching for
-	//because such a string would have a '\n' before its name which cannot be the case at the beginning
+	//because such a std::string would have a '\n' before its name which cannot be the case at the beginning
 	if(start > 0)
 	{
-		//we know the wanted string isn't the first one so we have to do a second search
+		//we know the wanted std::string isn't the first one so we have to do a second search
 		//with a more unique searchString that makes sure we get the right one
 		searchString.insert(0, "\n");
 		start = var_buffer.find(searchString, start-1);	//step back one char to integrate a possible missing '\n' in the search
@@ -86,7 +86,7 @@ Packet::~Packet( )
 	}
 	end = var_buffer.find_first_of('\n', start+1);		//we are definitely searching after the start index
 
-	if(start != string::npos && end != string::npos)
+	if(start != std::string::npos && end != std::string::npos)
 	{
 		int actualStart = start+searchString.size();
 		if(end != actualStart)		//the found key is empty
@@ -95,23 +95,23 @@ Packet::~Packet( )
 	return result;
 }
 
-void Packet::SetVar(string varname, string varvalue, bool skipCheck)
+void Packet::SetVar(std::string varname, std::string varvalue, bool skipCheck)
 {
 	if(!skipCheck)		//ususally we don't set the same key twice so its save to skip a check for that
 	{
 		int start, end;
-		string result = "";
-		string searchString = varname;
+		std::string result = "";
+		std::string searchString = varname;
 		searchString.append("=");
 		//if(GetNumberOfKeys() > 0)
 			//searchString.insert(0, "\n");		//this helps searching for the exact name
 
 		start = var_buffer.find(searchString);
 		//if the name we search for begins at 0 then we know for sure that there cannot be a second one we are searching for
-		//because such a string would have a '\n' before its name which cannot be the case at the beginning
+		//because such a std::string would have a '\n' before its name which cannot be the case at the beginning
 		if(start > 0)
 		{
-			//we know the wanted string isn't the first one so we have to do a second search
+			//we know the wanted std::string isn't the first one so we have to do a second search
 			//with a more unique searchString that makes sure we get the right one
 			searchString.insert(0, "\n");
 			start = var_buffer.find(searchString, start-1);	//step back one char to integrate a possible missing '\n' in the search
@@ -119,10 +119,10 @@ void Packet::SetVar(string varname, string varvalue, bool skipCheck)
 		}
 		end = var_buffer.find_first_of('\n', start+1);		//we are definitely searching after the start index
 
-		if(start == string::npos || end == string::npos)
+		if(start == std::string::npos || end == std::string::npos)
 		{
 			//we have a new entry
-			string newEntry = varname;
+			std::string newEntry = varname;
 			newEntry.append("=");
 			newEntry.append(varvalue);
 			newEntry.append("\n");
@@ -137,7 +137,7 @@ void Packet::SetVar(string varname, string varvalue, bool skipCheck)
 	}
 	else
 	{
-		string newEntry = varname;
+		std::string newEntry = varname;
 		newEntry.append("=");
 		newEntry.append(varvalue);
 		newEntry.append("\n");
@@ -145,23 +145,23 @@ void Packet::SetVar(string varname, string varvalue, bool skipCheck)
 	}
 }//*/
 
-string Packet::GetVar(string varname)
+std::string Packet::GetVar(std::string varname)
 {
 	size_t start, end;
-	string result = "";
+	std::string result = "";
 	varname.insert(varname.begin(), '\n');
 	varname.append("=");
 
-	if((start = var_buffer.find(varname)) == string::npos)
+	if((start = var_buffer.find(varname)) == std::string::npos)
 	{
 		varname.erase(varname.begin());
 		start = var_buffer.find(varname);	// repeat search without including newline at beginning
 	}
 	//if the name we search for begins at 0 then we know for sure that there cannot be a second one we are searching for
-	//because such a string would have a '\n' before its name which cannot be the case at the beginning
+	//because such a std::string would have a '\n' before its name which cannot be the case at the beginning
 
 	size_t actualStart = start+varname.size();
-	if(start != string::npos && (end = var_buffer.find('\n', actualStart)) != string::npos)
+	if(start != std::string::npos && (end = var_buffer.find('\n', actualStart)) != std::string::npos)
 	{
 		if(end != actualStart)					// the found key is empty
 			result = var_buffer.substr(actualStart, (end-actualStart));
@@ -169,24 +169,24 @@ string Packet::GetVar(string varname)
 	return result;
 }
 
-void Packet::SetVar(string varname, string varvalue, bool skipCheck)
+void Packet::SetVar(std::string varname, std::string varvalue, bool skipCheck)
 {
 	if(!skipCheck)		//ususally we don't set the same key twice so its save to skip a check for that
 	{
 		size_t start, end;
-		string result = "";
+		std::string result = "";
 		varname.insert(varname.begin(), '\n');
 		varname.append("=");
 
-		if((start = var_buffer.find(varname)) == string::npos)
+		if((start = var_buffer.find(varname)) == std::string::npos)
 		{
 			varname.erase(varname.begin());
 			start = var_buffer.find(varname);	// repeat search without including newline at beginning
 		}
 		//if the name we search for begins at 0 then we know for sure that there cannot be a second one we are searching for
-		//because such a string would have a '\n' before its name which cannot be the case at the beginning
+		//because such a std::string would have a '\n' before its name which cannot be the case at the beginning
 
-		if(start == string::npos || (end = var_buffer.find('\n', start+1)) == string::npos)
+		if(start == std::string::npos || (end = var_buffer.find('\n', start+1)) == std::string::npos)
 		{
 			//we have a new entry
 			varname.append("=");
@@ -210,9 +210,9 @@ void Packet::SetVar(string varname, string varvalue, bool skipCheck)
 	}
 }
 
-string Packet::GetVar(const char* varname)
+std::string Packet::GetVar(const char* varname)
 {
-	string varnam = varname;
+	std::string varnam = varname;
 	return GetVar(varnam);
 }
 
@@ -220,7 +220,7 @@ int Packet::GetNumberOfKeys()
 {
 	// just count the number of newlines for this
 	size_t buffer = 0, size = 0;
-	while((buffer = var_buffer.find('\n', buffer)) != string::npos)
+	while((buffer = var_buffer.find('\n', buffer)) != std::string::npos)
 	{
 		size++;
 		buffer++;	// update starting point as well or this ends up in an infite loop
@@ -228,27 +228,27 @@ int Packet::GetNumberOfKeys()
 	return size;
 }
 
-string Packet::toString()
+std::string Packet::toString()
 {
-	string readable = var_buffer;
+	std::string readable = var_buffer;
 	if(!readable.empty())
 	{
 		size_t buffer = 0;
-		while((buffer = readable.find('\n', buffer)) != string::npos && buffer < readable.size())
+		while((buffer = readable.find('\n', buffer)) != std::string::npos && buffer < readable.size())
 		{
 			if(buffer < readable.size()-1)
 				readable.replace(buffer, 1, ", ");
 			else
 				readable.pop_back();	// delete last newline (only gets executed if last char is really \n)
-			buffer++;			// increased the string +1 so update the current index
+			buffer++;			// increased the std::string +1 so update the current index
 		}
 	}
 	return readable;
 }
 
-void Packet::SetVar(string varname, int varvalue, bool skipCheck)
+void Packet::SetVar(std::string varname, int varvalue, bool skipCheck)
 {
-	SetVar(varname, lexical_cast<string>(varvalue), skipCheck);
+	SetVar(varname, boost::lexical_cast<std::string>(varvalue), skipCheck);
 }
 
 void Packet::SetType2(unsigned int type2)
@@ -256,7 +256,7 @@ void Packet::SetType2(unsigned int type2)
 	this->type2 = type2;
 }
 
-string Packet::GetData( )
+std::string Packet::GetData( )
 {
 	return var_buffer;
 }

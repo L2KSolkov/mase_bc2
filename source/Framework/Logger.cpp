@@ -85,7 +85,6 @@ Logger::Logger(debugSettings dbg, consoleSettings con)
 	consoleWarningLevel			= dbg.console_warning_level;
 	logfile						= dbg.log_create;
 
-//#ifdef _DEMO_RELEASE
 	if(fileNotificationLevel > 3)
 		fileNotificationLevel = 3;
 	if(fileWarningLevel > 3)
@@ -94,7 +93,6 @@ Logger::Logger(debugSettings dbg, consoleSettings con)
 		consoleNotificationLevel = 3;
 	if(consoleWarningLevel > 3)
 		consoleWarningLevel = 3;
-//#endif
 
 	if(!useNormalConsole || useColor)
 	{
@@ -121,7 +119,7 @@ Logger::Logger(debugSettings dbg, consoleSettings con)
 	if(dbg.log_create)
 	{
 		bool splitFile	= dbg.log_timestamp;
-		string filename("logfile");
+		std::string filename("logfile");
 
 		if(splitFile)
 		{
@@ -169,7 +167,7 @@ void QuitHandler(int signum)
 	exit(signum);
 }
 
-const string colors[9][2] =		// linux terminal should use escape characters for coloring, apparently the bold setting (1) also affects color intensity
+const std::string colors[9][2] =		// linux terminal should use escape characters for coloring, apparently the bold setting (1) also affects color intensity
 {
 	//notifications have default background, warnings have red background (41)
 	{"\033[37m",	"\033[37;41m"},		// DEBUG,			Grey
@@ -216,7 +214,7 @@ Logger::Logger(debugSettings dbg, consoleSettings con)
 	if(dbg.log_create)
 	{
 		bool splitFile	= dbg.log_timestamp;
-		string filename("logfile");
+		std::string filename("logfile");
 
 		if(splitFile)
 		{
@@ -285,7 +283,7 @@ void Logger::notification(int level, int from, const char* message, ...)
 
 		//Print message into file
 		if(logfile && fileNotificationLevel >= level)
-			fp << logbuf << endl;
+			fp << logbuf << std::endl;
 
 		if(msgCutOffLength > -1 && msgCutOffLength < 96750)
 			logbuf[msgCutOffLength] = 0;
@@ -329,12 +327,12 @@ void Logger::simpleNotification(int level, int from, const char* message)
 		else
 			sprintf(logbuf, "null");
 
-		string text = logbuf;
+		std::string text = logbuf;
 		text.append(message);
 
 		//Print message into file
 		if(logfile && fileNotificationLevel >= level)
-			fp << text << endl;
+			fp << text << std::endl;
 
 		//Print the message in the console
 		if(consoleNotificationLevel >= level)
@@ -376,7 +374,7 @@ void Logger::warning(int level, int from, const char* message, ...)
 
 		//Print message into file
 		if(logfile && fileWarningLevel >= level)
-			fp << logbuf << endl;
+			fp << logbuf << std::endl;
 
 		if(msgCutOffLength > -1 && msgCutOffLength < 2560)
 			logbuf[msgCutOffLength] = 0;
@@ -420,7 +418,7 @@ void Logger::error(int from, const char* message, ...)
 
 	//Print message into file
 	if(logfile)
-		fp << logbuf << endl;
+		fp << logbuf << std::endl;
 
 	if(msgCutOffLength > -1 && msgCutOffLength < 2560)
 		logbuf[msgCutOffLength] = 0;
@@ -430,7 +428,7 @@ void Logger::error(int from, const char* message, ...)
 
 bool Logger::setFile(const char* filename)
 {
-	fp.open(filename, ios::out | ios::trunc);
+	fp.open(filename, std::ios::out | std::ios::trunc);
 	if(fp.is_open() && fp.good())
 		return true;
 	else
@@ -472,7 +470,7 @@ const char* Logger::buildName(int from)
 #if defined (_WIN32)
 unsigned short Logger::buildColor(int from, bool notification)
 #else
-string Logger::buildColor(int from, bool notification)
+std::string Logger::buildColor(int from, bool notification)
 #endif
 {
 	return colors[from][!notification];		//we have to invert the boolean to make use of '0' and '1' properly
@@ -520,7 +518,7 @@ void Logger::updateTitle(char* title)
 	SetConsoleTitle(title);
 }
 #else
-void Logger::updateConsole(string color, const char* msg, int msgLength)   // msgLength does notthing here
+void Logger::updateConsole(std::string color, const char* msg, int msgLength)   // msgLength does notthing here
 {
 	if(useColor)// && lastColor.compare(color) != 0)	// since we reset all text attributes we always set a new color for a new message
 	{

@@ -13,14 +13,7 @@
 #define WINDOW_X 102
 #define WINDOW_Y 36
 
-//#define _DEMO_RELEASE
-
-#if defined _DEMO_RELEASE
-	#define AGE_LIMIT 18
-#else
-	#define AGE_LIMIT 0
-#endif
-
+#define AGE_LIMIT 0
 enum {
 	DEBUG,				// internal stuff
 	DATABASE,			// database
@@ -48,8 +41,6 @@ enum {
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/lexical_cast.hpp>
 
-using namespace boost;
-using namespace std;
 
 struct debugSettings
 {
@@ -68,15 +59,15 @@ struct connectionSettings
 	int theater_client_port;
 	int plasma_server_port;
 	int theater_server_port;
-	string emulator_ip;
-	string emulator_port;
+	std::string emulator_ip;
+	std::string emulator_port;
 	bool use_http;
 	bool updater_respond;
 };
 
 struct emulatorSettings
 {
-	string global_server_version;
+	std::string global_server_version;
 	bool enable_server_filters;
 	bool all_stats_unlocked;
 	bool all_players_are_veterans;
@@ -96,16 +87,16 @@ struct consoleSettings
 
 struct header
 {
-	string name;
-	string value;
+	std::string name;
+	std::string value;
 };
 
 /// A request received from a client.
 struct request
 {
-	string method;
-	string uri;
+	std::string method;
+	std::string uri;
 	int http_version_major;
 	int http_version_minor;
-	vector<header> headers;
+	std::vector<header> headers;
 };

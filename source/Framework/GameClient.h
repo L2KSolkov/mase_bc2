@@ -14,8 +14,8 @@ class GameClient
 		list_entry user;
 
 		//clientInfoPlasma->
-		string	user_lkey;
-		string	persona_lkey;
+		std::string	user_lkey;
+		std::string	persona_lkey;
 		Stats*	stats_data;
 		//<-clientInfoPlasma
 
@@ -26,22 +26,22 @@ class GameClient
 		//<-clientInfoTheater
 
 		bool isLocal;	// is the client in the same network as the emulator?
-		string emuIp;
+		std::string emuIp;
 		bool alreadyLoggedIn;
-		list<string> playerList;
-		void filterGames(Packet* packet, list<int>* filtered);
+		std::list<std::string> playerList;
+		void filterGames(Packet* packet, std::list<int>* filtered);
 
 	public:
-		GameClient(int connectionType, Database* db, string emuIp, bool isLocal);
+		GameClient(int connectionType, Database* db, std::string emuIp, bool isLocal);
 		~GameClient();
 
-		bool acct(list<Packet*>* queue, Packet* packet, string txn, const char* ip);
-		bool asso(list<Packet*>* queue, Packet* packet, string txn);
-		bool xmsg(list<Packet*>* queue, Packet* packet, string txn);
-		bool pres(list<Packet*>* queue, Packet* packet, string txn);
-		bool recp(list<Packet*>* queue, Packet* packet, string txn);
-		bool pnow(list<Packet*>* queue, Packet* packet, string txn);
-		int rank(list<Packet*>* queue, Packet* packet, string txn);
+		bool acct(std::list<Packet*>* queue, Packet* packet, std::string txn, const char* ip);
+		bool asso(std::list<Packet*>* queue, Packet* packet, std::string txn);
+		bool xmsg(std::list<Packet*>* queue, Packet* packet, std::string txn);
+		bool pres(std::list<Packet*>* queue, Packet* packet, std::string txn);
+		bool recp(std::list<Packet*>* queue, Packet* packet, std::string txn);
+		bool pnow(std::list<Packet*>* queue, Packet* packet, std::string txn);
+		int rank(std::list<Packet*>* queue, Packet* packet, std::string txn);
 
 		int ProcessTheater(std::list<Packet*>* queue, Packet* packet, char* type, const char* ip);
 };

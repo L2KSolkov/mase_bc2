@@ -12,7 +12,7 @@ class Packet
 		char*			type;
 		unsigned int	type2;
 		int				length;
-		string			var_buffer;
+		std::string			var_buffer;
 
 	public:
 		Packet(const char* createType, unsigned int createType2, size_t createLength, const char* createData);	//constructor for receiving a packet
@@ -20,15 +20,15 @@ class Packet
 		Packet(Packet* packet);		//copy constructor
 		~Packet();
 
-		string GetVar(string varname);
-		string GetVar(const char* varname);
-		void SetVar(string varname, string varvalue, bool skipCheck = true);
-		void SetVar(string varname, int varvalue, bool skipCheck = true);
+		std::string GetVar(std::string varname);
+		std::string GetVar(const char* varname);
+		void SetVar(std::string varname, std::string varvalue, bool skipCheck = true);
+		void SetVar(std::string varname, int varvalue, bool skipCheck = true);
 		void SetType2(unsigned int type2);
 		int GetNumberOfKeys();
-		string toString();
+		std::string toString();
 
-		string GetData();
+		std::string GetData();
 		char* GetType();
 		unsigned int GetType2();
 		int	GetLength();
