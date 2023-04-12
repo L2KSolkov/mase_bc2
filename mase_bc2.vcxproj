@@ -162,6 +162,9 @@
     <PreLinkEvent>
       <Command>call $(SolutionDir)\Scripts\Release_Build_Boost.bat</Command>
     </PreLinkEvent>
+    <PreBuildEvent>
+      <Command>call $(SolutionDir)\Scripts\Setup.bat</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="source\main.h" />
