@@ -163,5 +163,8 @@
     <None Include="Scripts\Setup.bat">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="Scripts\Release_Build_Boost.bat">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
