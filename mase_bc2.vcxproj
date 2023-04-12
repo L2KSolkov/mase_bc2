@@ -119,6 +119,9 @@
       <AdditionalLibraryDirectories>$(SolutionDir)external\boost\stage\lib;$(OPEN_SSL_DIR)lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>libcrypto.lib;libssl.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreLinkEvent>
+      <Command>call $(SolutionDir)\Scripts\Debug_Build_Boost.bat</Command>
+    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
